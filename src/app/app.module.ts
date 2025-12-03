@@ -18,6 +18,10 @@ import { CallbackComponent } from './components/callback/callback.component';
 // Pages
 import { HomeComponent } from './pages/home/home.component';
 import { MyProfileComponent } from './pages/my-profile/my-profile.component';
+import { LikedTracksComponent } from './pages/liked-tracks/liked-tracks.component';
+import { PlaylistsComponent } from './pages/playlists/playlists.component';
+import { SearchComponent } from './pages/search/search.component';
+import { MyCrateComponent } from './pages/my-crate/my-crate.component';
 
 // Services
 import { AuthService } from './services/auth.service';
@@ -25,6 +29,8 @@ import { ToastService } from './services/toast.service';
 import { UserService } from './services/user.service';
 import { TrackService } from './services/track.service';
 import { PlaylistService } from './services/playlist.service';
+import { DownloadQueueService } from './services/download-queue.service';
+import { DownloadService } from './services/download.service';
 
 // Interceptors
 import { AuthInterceptor } from './interceptors/auth.interceptor';
@@ -41,6 +47,10 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     // Pages
     HomeComponent,
     MyProfileComponent,
+    LikedTracksComponent,
+    PlaylistsComponent,
+    SearchComponent,
+    MyCrateComponent,
   ],
   imports: [
     BrowserModule,
@@ -56,6 +66,8 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     UserService,
     TrackService,
     PlaylistService,
+    DownloadQueueService,
+    DownloadService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

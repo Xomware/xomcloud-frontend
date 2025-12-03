@@ -19,6 +19,10 @@
       <a routerLink="/search" routerLinkActive="active" [ngClass]="{'selected': isSelected('/search')}">
         Search
       </a>
+      <a routerLink="/my-crate" routerLinkActive="active" [ngClass]="{'selected': isSelected('/my-crate')}" class="crate-link">
+        My Crate
+        <span class="crate-badge" *ngIf="queueCount > 0">{{ queueCount }}</span>
+      </a>
     </div>
   </div>
 
@@ -38,6 +42,10 @@
     <a routerLink="/liked-tracks" routerLinkActive="active" (click)="selectItem('/liked-tracks')">Liked Tracks</a>
     <a routerLink="/playlists" routerLinkActive="active" (click)="selectItem('/playlists')">Playlists</a>
     <a routerLink="/search" routerLinkActive="active" (click)="selectItem('/search')">Search</a>
+    <a routerLink="/my-crate" routerLinkActive="active" (click)="selectItem('/my-crate')" class="crate-link">
+      My Crate
+      <span class="crate-badge" *ngIf="queueCount > 0">{{ queueCount }}</span>
+    </a>
     <a class="logout-link" (click)="logout()">Logout</a>
   </div>
 </div>

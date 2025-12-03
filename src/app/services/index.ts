@@ -4,3 +4,5 @@ export * from './toast.service';
 export * from './user.service';
 export * from './track.service';
 export * from './playlist.service';
+export * from './download-queue.service';
+export * from './download.service';

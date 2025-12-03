@@ -1,0 +1,319 @@
+.liked-tracks-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a14 0%, #121225 100%);
+  padding: 90px 24px 140px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Page Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-content {
+  h1 {
+    font-size: 2rem;
+    color: #fff;
+    margin: 0 0 4px 0;
+  }
+  
+  .track-count {
+    color: #8a8a9a;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  &.active {
+    background: rgba(255, 107, 53, 0.2);
+    border-color: #ff6b35;
+    color: #ff6b35;
+  }
+  
+  &.primary {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    border: none;
+    color: #fff;
+    
+    &:hover {
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Error & Empty States
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  
+  .error-icon,
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 24px;
+  }
+  
+  h2 {
+    color: #fff;
+    font-size: 1.3rem;
+    margin: 0 0 12px 0;
+  }
+  
+  p {
+    color: #8a8a9a;
+    margin: 0 0 24px 0;
+  }
+}
+
+.retry-btn {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+  }
+}
+
+// Tracks List
+.tracks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    
+    .play-overlay {
+      opacity: 1;
+    }
+  }
+  
+  &.selected {
+    background: rgba(255, 107, 53, 0.15);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+  }
+  
+  &.in-queue {
+    border-left: 3px solid #ff6b35;
+  }
+}
+
+// Selection Checkbox
+.selection-checkbox {
+  flex-shrink: 0;
+  
+  .checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    
+    &.checked {
+      background: #ff6b35;
+      border-color: #ff6b35;
+      color: #fff;
+    }
+  }
+}
+
+.track-number {
+  width: 32px;
+  text-align: center;
+  color: #6a6a7a;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.track-artwork {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .play-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: #fff;
+  }
+}
+
+.track-info {
+  flex: 1;
+  min-width: 0;
+  
+  .track-title {
+    font-size: 1rem;
+    color: #fff;
+    margin: 0 0 4px 0;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .track-artist {
+    font-size: 0.85rem;
+    color: #8a8a9a;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.track-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  
+  .duration {
+    color: #b0b0c0;
+    font-size: 0.9rem;
+  }
+  
+  .plays {
+    color: #6a6a7a;
+    font-size: 0.8rem;
+  }
+}
+
+.track-actions {
+  flex-shrink: 0;
+}
+
+.add-to-queue-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #b0b0c0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    background: rgba(255, 107, 53, 0.2);
+    color: #ff6b35;
+  }
+  
+  &.in-queue {
+    background: rgba(255, 107, 53, 0.2);
+    color: #ff6b35;
+  }
+  
+  &:disabled {
+    cursor: default;
+  }
+}
+
+// Mobile Responsive
+@media (max-width: 768px) {
+  .liked-tracks-container {
+    padding: 80px 16px 140px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .track-item {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  
+  .track-number {
+    display: none;
+  }
+  
+  .track-artwork {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .track-meta {
+    display: none;
+  }
+}
