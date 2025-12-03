@@ -1,10 +1,7 @@
 // toolbar.component.ts
 import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from 'src/app/services/auth.service';
-import { LeagueService } from 'src/app/services/league.service';
-import { TeamService } from 'src/app/services/team.service';
-import { UserService } from 'src/app/services/user.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-toolbar',
@@ -13,66 +10,49 @@ import { UserService } from 'src/app/services/user.service';
 })
 export class ToolbarComponent implements OnInit {
   dropdownVisible = false;
-  isMobile: boolean;
-  constructor(
-    private router: Router,
-    private LeagueService: LeagueService,
-    private UserService: UserService,
-    private TeamService: TeamService,
-    private AuthService: AuthService
-    ) {
-      this.checkIfMobile();
-      window.addEventListener('resize', this.checkIfMobile.bind(this));
-    }
+  isMobile: boolean = false;
 
-  ngOnInit(): void {
-    console.log("Toolbar locked n loaded.")
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.checkIfMobile();
   }
 
-  // Toggle dropdown visibility
-  toggleDropdown() {
+  ngOnInit(): void {
+    window.addEventListener('resize', this.checkIfMobile.bind(this));
+  }
+
+  toggleDropdown(): void {
     this.dropdownVisible = !this.dropdownVisible;
   }
 
-  // Handle item selection and close dropdown
-  selectItem(route: string) {
-    this.dropdownVisible = false; // Close the dropdown
-    // Optionally, navigate to the selected route
-    this.router.navigate([route]); // Make sure to import Router
+  selectItem(route: string): void {
+    this.dropdownVisible = false;
+    this.router.navigate([route]);
   }
 
-  // Close dropdown if clicked outside
   @HostListener('document:click', ['$event'])
-  closeDropdown(event: MouseEvent) {
+  closeDropdown(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.dropdown') && !target.closest('.dropdown-button')) {
       this.dropdownVisible = false;
     }
   }
 
-  checkIfMobile() {
-    this.isMobile = window.innerWidth <= 768; // Adjust this threshold as needed
+  checkIfMobile(): void {
+    this.isMobile = window.innerWidth <= 768;
+  }
+
+  isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
   }
 
   isSelected(route: string): boolean {
     return this.router.url === route;
   }
-  get leagueId(): string {
-    return this.LeagueService.getMyLeague()?.getId();
-  }
 
-  get userId(): string {
-    return this.UserService.getMyUser()?.getUserId();
-  }
-
-  get teamUserName(): string {
-    return this.TeamService.getMyTeam().getUserName();
-  }
-  get teamLeagueId(): string {
-    return this.TeamService.getMyTeam()?.getLeague()?.getId();  
-  }
-  
-  isLoggedIn(): boolean {
-    return this.AuthService.isLoggedIn();
+  logout(): void {
+    this.authService.logout();
   }
 }

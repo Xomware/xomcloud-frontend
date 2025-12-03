@@ -1,7 +1,7 @@
+// footer.component.ts
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable, take } from 'rxjs';
-import { ToastService } from 'src/app/services/toast.service';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-footer',
@@ -9,21 +9,41 @@ import { ToastService } from 'src/app/services/toast.service';
   styleUrls: ['./footer.component.scss']
 })
 export class FooterComponent implements OnInit {
-  showDynamicButton: boolean = false;
-  footerButtonText: string = '';
-  githubRepoUrl: string = 'https://github.com/domgiordano/xomper-front-end';
-  userId: string;
+  showDynamicButton = false;
+  footerButtonText = '';
+  githubRepoUrl = 'https://github.com/domgiordano/xomcloud';
+  currentRoute = '';
 
+  constructor(private router: Router) {}
 
-  constructor(
-    private router: Router,
-    private ToastService: ToastService,
-  ) {}
-
-  ngOnInit() {
+  ngOnInit(): void {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.currentRoute = event.urlAfterRedirects;
+      this.updateDynamicButton();
+    });
   }
 
-  openGitHubRepo() {
+  private updateDynamicButton(): void {
+    if (this.currentRoute.includes('/liked-tracks')) {
+      this.showDynamicButton = true;
+      this.footerButtonText = 'Create Playlist';
+    } else if (this.currentRoute.includes('/search')) {
+      this.showDynamicButton = false;
+    } else {
+      this.showDynamicButton = false;
+    }
+  }
+
+  handleDynamicButtonClick(): void {
+    if (this.currentRoute.includes('/liked-tracks')) {
+      // Navigate to create playlist or emit event
+      console.log('Create playlist from liked tracks');
+    }
+  }
+
+  openGitHubRepo(): void {
     window.open(this.githubRepoUrl, '_blank');
   }
 }

@@ -1,50 +1,51 @@
-import { LeagueModel } from "./league.model";
-import { User } from "./user.interface";
-
-export class UserModel implements User {
-  user_id: string;
+// SoundCloud User Model
+export interface User {
+  id: number;
+  permalink: string;
   username: string;
-  display_name: string;
-  avatar: string | null;
-  is_bot: boolean;
-  is_owner: boolean;
-  is_commissioner: boolean;
-  metadata: { team_name?: string; location?: string; [key: string]: any } | null;
-  settings?: { theme?: string; notifications?: boolean; [key: string]: any };
-  leagues: LeagueModel[] = [];
+  uri: string;
+  permalink_url: string;
+  avatar_url: string;
+  country: string | null;
+  full_name: string;
+  city: string | null;
+  description: string | null;
+  discogs_name: string | null;
+  myspace_name: string | null;
+  website: string | null;
+  website_title: string | null;
+  online: boolean;
+  track_count: number;
+  playlist_count: number;
+  followers_count: number;
+  followings_count: number;
+  public_favorites_count: number;
+  likes_count: number;
+  comments_count: number;
+  reposts_count?: number;
+  created_at: string;
+  last_modified: string;
+  first_name?: string;
+  last_name?: string;
+  subscription?: Subscription;
+  visuals?: Visuals;
+}
 
-  constructor(data: User) {
-    Object.assign(this, data);
-  }
+export interface Subscription {
+  product: {
+    id: string;
+    name: string;
+  };
+}
 
-  getProfilePicture(): string {
-    return this.avatar
-      ? `https://sleepercdn.com/avatars/${this.avatar}`
-      : 'assets/img/nfl.png';
-  }
+export interface Visuals {
+  enabled: boolean;
+  visuals: Visual[];
+  tracking: any;
+}
 
-  buildAvatar(avatar: string): string {
-    return `https://sleepercdn.com/avatars/${avatar}`;
-  }
-
-  getDisplayName(): string {
-    return this.display_name || this.username;
-  }
-  getUserId(): string {
-    return this.user_id
-  }
-  getUserName(): string {
-    return this.username;
-  }
-
-  // ---- LEAGUES ----
-  setUserLeagues(newLeagues: LeagueModel[]): void {
-    this.leagues = newLeagues;
-  }
-
-  getUserLeagues(): LeagueModel[] {
-    return this.leagues;
-  }
-
-
+export interface Visual {
+  urn: string;
+  entry_time: number;
+  visual_url: string;
 }

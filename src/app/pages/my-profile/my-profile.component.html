@@ -1,0 +1,125 @@
+<app-loader [loading]="loading" message="Loading your profile..."></app-loader>
+
+<div class="profile-container" *ngIf="!loading">
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error">
+    <div class="error-content">
+      <span class="error-icon">⚠️</span>
+      <h2>{{ error }}</h2>
+      <button class="retry-btn" (click)="loadProfile()">Try Again</button>
+    </div>
+  </div>
+
+  <!-- Profile Content -->
+  <div class="profile-content" *ngIf="user && !error">
+    <!-- Profile Header -->
+    <header class="profile-header">
+      <div class="profile-banner">
+        <div class="banner-overlay"></div>
+      </div>
+      
+      <div class="profile-info">
+        <div class="avatar-container">
+          <img [src]="getAvatarUrl('t500x500')" 
+               [alt]="user.username" 
+               class="avatar"
+               (error)="onImageError($event, 'assets/img/default-avatar.png')">
+        </div>
+        
+        <div class="user-details">
+          <h1 class="username">{{ user.full_name || user.username }}</h1>
+          <p class="handle" *ngIf="user.full_name">&#64;{{ user.username }}</p>
+          <p class="location" *ngIf="user.city || user.country">
+            📍 {{ user.city }}{{ user.city && user.country ? ', ' : '' }}{{ user.country }}
+          </p>
+          <p class="join-date">Member since {{ getJoinDate() }}</p>
+          
+          <button class="soundcloud-btn" (click)="openSoundCloudProfile()">
+            View on SoundCloud
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats Grid -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-value">{{ formatNumber(stats.tracks) }}</span>
+          <span class="stat-label">Tracks</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value">{{ formatNumber(stats.playlists) }}</span>
+          <span class="stat-label">Playlists</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value">{{ formatNumber(stats.followers) }}</span>
+          <span class="stat-label">Followers</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value">{{ formatNumber(stats.followings) }}</span>
+          <span class="stat-label">Following</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value">{{ formatNumber(stats.likes) }}</span>
+          <span class="stat-label">Likes</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bio Section -->
+    <section class="bio-section" *ngIf="user.description">
+      <h2 class="section-title">About</h2>
+      <p class="bio-text">{{ user.description }}</p>
+    </section>
+
+    <!-- Recent Liked Tracks -->
+    <section class="tracks-section" *ngIf="recentTracks.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">Recently Liked</h2>
+        <a routerLink="/liked-tracks" class="view-all">View All →</a>
+      </div>
+      
+      <div class="tracks-grid">
+        <div class="track-card" *ngFor="let track of recentTracks">
+          <div class="track-artwork">
+            <img [src]="getTrackArtwork(track)" 
+                 [alt]="track.title"
+                 (error)="onImageError($event, 'assets/img/default-artwork.png')">
+            <div class="play-overlay">
+              <svg viewBox="0 0 24 24" width="32" height="32">
+                <path fill="currentColor" d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="track-info">
+            <h3 class="track-title">{{ track.title }}</h3>
+            <p class="track-artist">{{ track.user.username }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Playlists -->
+    <section class="playlists-section" *ngIf="playlists.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">Your Playlists</h2>
+        <a routerLink="/playlists" class="view-all">View All →</a>
+      </div>
+      
+      <div class="playlists-grid">
+        <div class="playlist-card" *ngFor="let playlist of playlists">
+          <div class="playlist-artwork">
+            <img [src]="getPlaylistArtwork(playlist)" 
+                 [alt]="playlist.title"
+                 (error)="onImageError($event, 'assets/img/default-artwork.png')">
+          </div>
+          <div class="playlist-info">
+            <h3 class="playlist-title">{{ playlist.title }}</h3>
+            <p class="playlist-tracks">{{ playlist.track_count }} tracks</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

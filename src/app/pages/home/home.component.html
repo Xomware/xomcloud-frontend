@@ -1,36 +1,47 @@
-<div class="home-page">
-  <app-loader [loading]="loading"></app-loader>
-
-  <!-- Welcome / League Login -->
-  <div class="login-header">
-    <h2>Login to {{ leagueName || 'Xomper' }}</h2>
-  </div>
-
-  <div class="login-box">
-    <div class="login-container">
-
-      <!-- Username Input -->
-      <input
-        type="text"
-        class="login-input"
-        placeholder="Username"
-        [(ngModel)]="username"
-      />
-
-      <!-- Password Input -->
-      <input
-        type="password"
-        class="login-input"
-        placeholder="Password"
-        [(ngModel)]="password"
-      />
-
-      <!-- Buttons -->
-      <div class="login-buttons">
-        <button class="login-button" (click)="login()">Login</button>
-        <button class="reset-button" (click)="resetPassword()">Reset Password</button>
-      </div>
-
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="title-x">X</span>OM<span class="title-cloud">CLOUD</span>
+      </h1>
+      <p class="hero-subtitle">Your SoundCloud experience, elevated.</p>
+      <p class="hero-description">
+        Connect your SoundCloud account to manage your liked tracks, create playlists, 
+        and discover new music—all in a beautiful, modern interface.
+      </p>
+      <button class="connect-button" (click)="login()">
+        <svg class="soundcloud-icon" viewBox="0 0 24 24" width="24" height="24">
+          <path fill="currentColor" d="M11.56 8.87V17h8.76c1.85 0 3.35-1.67 3.35-3.73 0-2.06-1.5-3.73-3.35-3.73-.35 0-.68.06-1 .17-.64-2.43-2.77-4.23-5.32-4.23-2.67 0-4.89 1.97-5.41 4.52-.14-.01-.28-.02-.42-.02-1.75 0-3.17 1.42-3.17 3.17 0 1.75 1.42 3.17 3.17 3.17h.33V8.87c0-.54.44-.98.98-.98s.98.44.98.98z"/>
+        </svg>
+        Connect with SoundCloud
+      </button>
     </div>
-  </div>
+    <div class="hero-visual">
+      <div class="waveform">
+        <div class="bar" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <h2 class="section-title">What You Can Do</h2>
+    <div class="features-grid">
+      <div class="feature-card" *ngFor="let feature of features">
+        <span class="feature-icon">{{ feature.icon }}</span>
+        <h3 class="feature-title">{{ feature.title }}</h3>
+        <p class="feature-description">{{ feature.description }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <h2>Ready to get started?</h2>
+    <p>Connect your SoundCloud account and explore your music library like never before.</p>
+    <button class="connect-button secondary" (click)="login()">
+      Get Started Free
+    </button>
+  </section>
 </div>

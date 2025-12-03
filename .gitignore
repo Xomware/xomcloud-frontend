@@ -41,5 +41,5 @@ testem.log
 .DS_Store
 Thumbs.db
 # Testing
-src/environments/environment.dev.ts
+src/environments/environment.ts
 .vscode
