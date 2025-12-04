@@ -5,12 +5,12 @@ import {
   HttpInterceptor,
   HttpHandler,
   HttpRequest,
-  HttpErrorResponse
+  HttpErrorResponse,
 } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, switchMap, take, finalize } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
-import { environment } from 'src/environments/environment';
+import { environment } from 'src/environments/environment.prod';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -19,7 +19,10 @@ export class AuthInterceptor implements HttpInterceptor {
 
   constructor(private authService: AuthService) {}
 
-  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(
+    request: HttpRequest<any>,
+    next: HttpHandler
+  ): Observable<HttpEvent<any>> {
     // Only intercept requests to SoundCloud API
     if (!request.url.startsWith(environment.apiBaseUrl)) {
       return next.handle(request);
@@ -35,7 +38,10 @@ export class AuthInterceptor implements HttpInterceptor {
     );
   }
 
-  private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  private handle401Error(
+    request: HttpRequest<any>,
+    next: HttpHandler
+  ): Observable<HttpEvent<any>> {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
@@ -44,7 +50,7 @@ export class AuthInterceptor implements HttpInterceptor {
         switchMap((token) => {
           this.isRefreshing = false;
           this.refreshTokenSubject.next(token.access_token);
-          
+
           // Retry the failed request with new token
           const authReq = this.addToken(request, token.access_token);
           return next.handle(authReq);
@@ -61,7 +67,7 @@ export class AuthInterceptor implements HttpInterceptor {
     } else {
       // Wait for the token refresh to complete
       return this.refreshTokenSubject.pipe(
-        filter(token => token !== null),
+        filter((token) => token !== null),
         take(1),
         switchMap((token) => {
           const authReq = this.addToken(request, token!);
@@ -74,8 +80,8 @@ export class AuthInterceptor implements HttpInterceptor {
   private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
     return request.clone({
       setHeaders: {
-        Authorization: `OAuth ${token}`
-      }
+        Authorization: `OAuth ${token}`,
+      },
     });
   }
 }

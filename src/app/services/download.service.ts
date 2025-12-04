@@ -7,7 +7,7 @@ import { Track } from '../models';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
 import { DownloadQueueService, QueuedTrack } from './download-queue.service';
-import { environment } from 'src/environments/environment';
+import { environment } from 'src/environments/environment.prod';
 
 declare var JSZip: any;
 
@@ -20,7 +20,7 @@ export interface DownloadProgress {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DownloadService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
@@ -38,16 +38,20 @@ export class DownloadService {
     // First try to get from media transcodings
     if (track.media?.transcodings) {
       const progressive = track.media.transcodings.find(
-        t => t.format.protocol === 'progressive' && t.format.mime_type === 'audio/mpeg'
+        (t) =>
+          t.format.protocol === 'progressive' &&
+          t.format.mime_type === 'audio/mpeg'
       );
-      
+
       if (progressive) {
-        return this.http.get<{ url: string }>(progressive.url, {
-          headers: this.authService.getAuthHeaders()
-        }).pipe(
-          map(response => response.url),
-          catchError(() => this.fallbackStreamUrl(track.id))
-        );
+        return this.http
+          .get<{ url: string }>(progressive.url, {
+            headers: this.authService.getAuthHeaders(),
+          })
+          .pipe(
+            map((response) => response.url),
+            catchError(() => this.fallbackStreamUrl(track.id))
+          );
       }
     }
 
@@ -55,33 +59,48 @@ export class DownloadService {
   }
 
   private fallbackStreamUrl(trackId: number): Observable<string | null> {
-    return this.http.get<any>(`${this.apiBaseUrl}/tracks/${trackId}/streams`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(response => response.http_mp3_128_url || response.hls_mp3_128_url || null),
-      catchError(error => {
-        console.error(`Failed to get stream URL for track ${trackId}:`, error);
-        return of(null);
+    return this.http
+      .get<any>(`${this.apiBaseUrl}/tracks/${trackId}/streams`, {
+        headers: this.authService.getAuthHeaders(),
       })
-    );
+      .pipe(
+        map(
+          (response) =>
+            response.http_mp3_128_url || response.hls_mp3_128_url || null
+        ),
+        catchError((error) => {
+          console.error(
+            `Failed to get stream URL for track ${trackId}:`,
+            error
+          );
+          return of(null);
+        })
+      );
   }
 
   // ==================== Single Track Download ====================
 
   downloadSingleTrack(track: Track): void {
-    this.toastService.showInfoToast(`Preparing "${track.title}" for download...`);
-    
+    this.toastService.showInfoToast(
+      `Preparing "${track.title}" for download...`
+    );
+
     this.getStreamUrl(track).subscribe({
       next: (url) => {
         if (url) {
-          this.downloadFromUrl(url, this.sanitizeFilename(track.title) + '.mp3');
+          this.downloadFromUrl(
+            url,
+            this.sanitizeFilename(track.title) + '.mp3'
+          );
         } else {
-          this.toastService.showNegativeToast('This track is not available for download');
+          this.toastService.showNegativeToast(
+            'This track is not available for download'
+          );
         }
       },
       error: () => {
         this.toastService.showNegativeToast('Failed to get download URL');
-      }
+      },
     });
   }
 
@@ -102,14 +121,14 @@ export class DownloadService {
     progressCallback?: (progress: DownloadProgress) => void
   ): Promise<boolean> {
     const queue = this.queueService.getQueue();
-    
+
     if (queue.length === 0) {
       this.toastService.showNegativeToast('Your crate is empty');
       return false;
     }
 
     this.queueService.setProcessing(true);
-    
+
     try {
       // Check if JSZip is available
       if (typeof JSZip === 'undefined') {
@@ -118,26 +137,26 @@ export class DownloadService {
 
       const zip = new JSZip();
       const folder = zip.folder('xomcloud-tracks');
-      
+
       let successCount = 0;
       let failCount = 0;
 
       for (let i = 0; i < queue.length; i++) {
         const item = queue[i];
-        
+
         if (progressCallback) {
           progressCallback({
             currentTrack: i + 1,
             totalTracks: queue.length,
             currentTrackName: item.track.title,
             phase: 'fetching',
-            percentage: Math.round((i / queue.length) * 100)
+            percentage: Math.round((i / queue.length) * 100),
           });
         }
 
         try {
           const streamUrl = await this.getStreamUrl(item.track).toPromise();
-          
+
           if (streamUrl) {
             if (progressCallback) {
               progressCallback({
@@ -145,16 +164,17 @@ export class DownloadService {
                 totalTracks: queue.length,
                 currentTrackName: item.track.title,
                 phase: 'downloading',
-                percentage: Math.round(((i + 0.5) / queue.length) * 100)
+                percentage: Math.round(((i + 0.5) / queue.length) * 100),
               });
             }
 
             const audioBlob = await this.fetchAudioBlob(streamUrl);
-            
+
             if (audioBlob) {
-              const filename = this.sanitizeFilename(
-                `${item.track.user.username} - ${item.track.title}`
-              ) + '.mp3';
+              const filename =
+                this.sanitizeFilename(
+                  `${item.track.user.username} - ${item.track.title}`
+                ) + '.mp3';
               folder.file(filename, audioBlob);
               successCount++;
             } else {
@@ -181,15 +201,15 @@ export class DownloadService {
           totalTracks: queue.length,
           currentTrackName: 'Creating zip file...',
           phase: 'zipping',
-          percentage: 95
+          percentage: 95,
         });
       }
 
       // Generate zip file
-      const zipBlob = await zip.generateAsync({ 
+      const zipBlob = await zip.generateAsync({
         type: 'blob',
         compression: 'DEFLATE',
-        compressionOptions: { level: 6 }
+        compressionOptions: { level: 6 },
       });
 
       // Download the zip
@@ -202,7 +222,7 @@ export class DownloadService {
           totalTracks: queue.length,
           currentTrackName: 'Complete!',
           phase: 'complete',
-          percentage: 100
+          percentage: 100,
         });
       }
 
@@ -218,21 +238,20 @@ export class DownloadService {
       }
 
       return true;
-
     } catch (error) {
       console.error('Zip download failed:', error);
       this.toastService.showNegativeToast('Download failed. Please try again.');
-      
+
       if (progressCallback) {
         progressCallback({
           currentTrack: 0,
           totalTracks: queue.length,
           currentTrackName: 'Error',
           phase: 'error',
-          percentage: 0
+          percentage: 0,
         });
       }
-      
+
       return false;
     } finally {
       this.queueService.setProcessing(false);
@@ -264,7 +283,8 @@ export class DownloadService {
   private async loadJSZip(): Promise<void> {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      script.src =
+        'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
       script.onload = () => resolve();
       script.onerror = () => reject(new Error('Failed to load JSZip'));
       document.head.appendChild(script);
