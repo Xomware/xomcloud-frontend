@@ -7,7 +7,7 @@ import { Track } from '../models';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
 import { DownloadQueueService } from './download-queue.service';
-import { environment } from 'src/environments/environment';
+import { environment } from 'src/environments/environment.prod';
 
 export interface DownloadProgress {
   phase:
