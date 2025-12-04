@@ -109,6 +109,11 @@ export class DownloadQueueService {
     this.toastService.showInfoToast('Crate cleared');
   }
 
+  clearQueueSilent(): void {
+    this.queue$.next([]);
+    this.saveToStorage();
+  }
+
   // ==================== Reordering ====================
 
   moveInQueue(fromIndex: number, toIndex: number): void {

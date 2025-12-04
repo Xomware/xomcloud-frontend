@@ -22,7 +22,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
   
   queue: QueuedTrack[] = [];
   isProcessing = false;
-  downloadProgress: DownloadProgress = { phase: 'idle', message: '', percentage: 0 };
+  downloadProgress: DownloadProgress = { active: false, message: '', current: 0, total: 0 };
 
   constructor(
     private queueService: DownloadQueueService,
@@ -103,13 +103,5 @@ export class MyCrateComponent implements OnInit, OnDestroy {
     if (target) {
       target.src = fallbackSrc;
     }
-  }
-
-  getProgressPhaseText(): string {
-    return this.downloadProgress.message || '';
-  }
-
-  isDownloading(): boolean {
-    return this.downloadProgress.phase !== 'idle' && this.downloadProgress.phase !== 'complete' && this.downloadProgress.phase !== 'error';
   }
 }

@@ -50,6 +50,20 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
+            },
+            "local": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.local.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -62,9 +76,12 @@
             },
             "development": {
               "buildTarget": "xomcloud:build:development"
+            },
+            "local": {
+              "buildTarget": "xomcloud:build:local"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "local"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -85,8 +102,5 @@
         }
       }
     }
-  },
-  "cli": {
-    "analytics": "7d6ef71f-ae2f-486a-b030-6caa4dde56cf"
   }
 }

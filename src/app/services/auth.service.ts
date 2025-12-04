@@ -4,9 +4,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, tap, switchMap } from 'rxjs/operators';
-import { environment } from 'src/environments/environment.prod';
+import { environment } from 'src/environments/environment';
 import { AuthToken, PKCEChallenge } from '../models';
 import { ToastService } from './toast.service';
+import { DownloadQueueService } from './download-queue.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,11 +17,11 @@ export class AuthService {
   private readonly clientSecret = environment.soundcloudClientSecret;
   private readonly redirectUri = `${environment.baseCallbackUrl}/callback`;
   private readonly authBaseUrl = environment.authBaseUrl;
-
+  
   private accessToken$ = new BehaviorSubject<string | null>(null);
   private refreshToken$ = new BehaviorSubject<string | null>(null);
   private tokenExpiry$ = new BehaviorSubject<Date | null>(null);
-
+  
   private readonly STORAGE_KEYS = {
     ACCESS_TOKEN: 'sc_access_token',
     REFRESH_TOKEN: 'sc_refresh_token',
@@ -32,28 +33,28 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private queueService: DownloadQueueService
   ) {
     this.loadStoredTokens();
   }
 
   // ==================== PKCE Generation ====================
-
+  
   private async generatePKCEChallenge(): Promise<PKCEChallenge> {
     const codeVerifier = this.generateRandomString(128);
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
     const state = this.generateRandomString(32);
-
+    
     return { codeVerifier, codeChallenge, state };
   }
 
   private generateRandomString(length: number): string {
-    const charset =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     const randomValues = new Uint8Array(length);
     crypto.getRandomValues(randomValues);
     return Array.from(randomValues)
-      .map((x) => charset[x % charset.length])
+      .map(x => charset[x % charset.length])
       .join('');
   }
 
@@ -66,7 +67,7 @@ export class AuthService {
 
   private base64UrlEncode(buffer: Uint8Array): string {
     let binary = '';
-    buffer.forEach((byte) => (binary += String.fromCharCode(byte)));
+    buffer.forEach(byte => binary += String.fromCharCode(byte));
     return btoa(binary)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
@@ -77,7 +78,7 @@ export class AuthService {
 
   async login(): Promise<void> {
     const pkce = await this.generatePKCEChallenge();
-
+    
     // Store PKCE verifier and state for callback validation
     sessionStorage.setItem(this.STORAGE_KEYS.PKCE_VERIFIER, pkce.codeVerifier);
     sessionStorage.setItem(this.STORAGE_KEYS.PKCE_STATE, pkce.state);
@@ -101,9 +102,7 @@ export class AuthService {
 
     if (error) {
       console.error('OAuth error:', error);
-      this.toastService.showNegativeToast(
-        'Authentication failed. Please try again.'
-      );
+      this.toastService.showNegativeToast('Authentication failed. Please try again.');
       this.router.navigate(['/home']);
       return;
     }
@@ -112,9 +111,7 @@ export class AuthService {
     const storedState = sessionStorage.getItem(this.STORAGE_KEYS.PKCE_STATE);
     if (!state || state !== storedState) {
       console.error('State mismatch - possible CSRF attack');
-      this.toastService.showNegativeToast(
-        'Security validation failed. Please try again.'
-      );
+      this.toastService.showNegativeToast('Security validation failed. Please try again.');
       this.router.navigate(['/home']);
       return;
     }
@@ -128,15 +125,11 @@ export class AuthService {
   }
 
   private exchangeCodeForToken(code: string): void {
-    const codeVerifier = sessionStorage.getItem(
-      this.STORAGE_KEYS.PKCE_VERIFIER
-    );
-
+    const codeVerifier = sessionStorage.getItem(this.STORAGE_KEYS.PKCE_VERIFIER);
+    
     if (!codeVerifier) {
       console.error('No PKCE verifier found');
-      this.toastService.showNegativeToast(
-        'Authentication session expired. Please try again.'
-      );
+      this.toastService.showNegativeToast('Authentication session expired. Please try again.');
       this.router.navigate(['/home']);
       return;
     }
@@ -152,34 +145,30 @@ export class AuthService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json; charset=utf-8',
+      'Accept': 'application/json; charset=utf-8',
     });
 
-    this.http
-      .post<AuthToken>(tokenUrl, body.toString(), { headers })
-      .subscribe({
-        next: (response) => {
-          this.storeTokens(response);
-          this.cleanupPKCE();
-          console.log('Authentication successful');
-          this.router.navigate(['/my-profile']);
-        },
-        error: (err) => {
-          console.error('Token exchange failed:', err);
-          this.toastService.showNegativeToast(
-            'Login failed. Please try again.'
-          );
-          this.cleanupPKCE();
-          this.router.navigate(['/home']);
-        },
-      });
+    this.http.post<AuthToken>(tokenUrl, body.toString(), { headers }).subscribe({
+      next: (response) => {
+        this.storeTokens(response);
+        this.cleanupPKCE();
+        console.log('Authentication successful');
+        this.router.navigate(['/my-profile']);
+      },
+      error: (err) => {
+        console.error('Token exchange failed:', err);
+        this.toastService.showNegativeToast('Login failed. Please try again.');
+        this.cleanupPKCE();
+        this.router.navigate(['/home']);
+      },
+    });
   }
 
   // ==================== Token Management ====================
 
   private storeTokens(token: AuthToken): void {
     const expiry = new Date(Date.now() + token.expires_in * 1000);
-
+    
     this.accessToken$.next(token.access_token);
     this.refreshToken$.next(token.refresh_token);
     this.tokenExpiry$.next(expiry);
@@ -196,7 +185,7 @@ export class AuthService {
 
     if (accessToken && refreshToken && tokenExpiry) {
       const expiry = new Date(tokenExpiry);
-
+      
       // Check if token is expired
       if (expiry > new Date()) {
         this.accessToken$.next(accessToken);
@@ -211,7 +200,7 @@ export class AuthService {
 
   refreshAccessToken(): Observable<AuthToken> {
     const refreshToken = this.refreshToken$.value;
-
+    
     if (!refreshToken) {
       return throwError(() => new Error('No refresh token available'));
     }
@@ -225,22 +214,20 @@ export class AuthService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json; charset=utf-8',
+      'Accept': 'application/json; charset=utf-8',
     });
 
-    return this.http
-      .post<AuthToken>(tokenUrl, body.toString(), { headers })
-      .pipe(
-        tap((response) => {
-          this.storeTokens(response);
-          console.log('Token refreshed successfully');
-        }),
-        catchError((error) => {
-          console.error('Token refresh failed:', error);
-          this.logout();
-          return throwError(() => error);
-        })
-      );
+    return this.http.post<AuthToken>(tokenUrl, body.toString(), { headers }).pipe(
+      tap((response) => {
+        this.storeTokens(response);
+        console.log('Token refreshed successfully');
+      }),
+      catchError((error) => {
+        console.error('Token refresh failed:', error);
+        this.logout();
+        return throwError(() => error);
+      })
+    );
   }
 
   private attemptTokenRefresh(): void {
@@ -248,7 +235,7 @@ export class AuthService {
       error: () => {
         // Refresh failed, clear tokens
         this.clearTokens();
-      },
+      }
     });
   }
 
@@ -261,7 +248,7 @@ export class AuthService {
     this.accessToken$.next(null);
     this.refreshToken$.next(null);
     this.tokenExpiry$.next(null);
-
+    
     localStorage.removeItem(this.STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(this.STORAGE_KEYS.TOKEN_EXPIRY);
@@ -271,18 +258,17 @@ export class AuthService {
 
   logout(): void {
     const accessToken = this.accessToken$.value;
-
+    
     if (accessToken) {
       // Call SoundCloud sign-out endpoint
-      this.http
-        .post(`${this.authBaseUrl}/sign-out`, { access_token: accessToken })
-        .subscribe({
-          complete: () => console.log('Signed out from SoundCloud'),
-          error: (err) => console.warn('Sign-out request failed:', err),
-        });
+      this.http.post(`${this.authBaseUrl}/sign-out`, { access_token: accessToken }).subscribe({
+        complete: () => console.log('Signed out from SoundCloud'),
+        error: (err) => console.warn('Sign-out request failed:', err)
+      });
     }
 
     this.clearTokens();
+    this.queueService.clearQueueSilent(); // Clear the download queue
     this.router.navigate(['/home']);
   }
 
@@ -297,9 +283,9 @@ export class AuthService {
   isLoggedIn(): boolean {
     const token = this.accessToken$.value;
     const expiry = this.tokenExpiry$.value;
-
+    
     if (!token || !expiry) return false;
-
+    
     // Check if token will expire in the next minute
     const expiryBuffer = new Date(Date.now() + 60000);
     return expiry > expiryBuffer;
@@ -308,7 +294,7 @@ export class AuthService {
   isTokenExpiringSoon(): boolean {
     const expiry = this.tokenExpiry$.value;
     if (!expiry) return true;
-
+    
     // Token expires in less than 5 minutes
     const expiryBuffer = new Date(Date.now() + 5 * 60 * 1000);
     return expiry < expiryBuffer;
@@ -318,8 +304,8 @@ export class AuthService {
   getAuthHeaders(): HttpHeaders {
     const token = this.accessToken$.value;
     return new HttpHeaders({
-      Authorization: `OAuth ${token}`,
-      Accept: 'application/json; charset=utf-8',
+      'Authorization': `OAuth ${token}`,
+      'Accept': 'application/json; charset=utf-8',
     });
   }
 }

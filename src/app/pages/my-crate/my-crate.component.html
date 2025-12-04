@@ -1,4 +1,15 @@
 <div class="crate-container">
+  <!-- Download Overlay -->
+  <div class="download-overlay" *ngIf="downloadProgress.active">
+    <div class="overlay-content">
+      <div class="spinner"></div>
+      <p class="overlay-message">{{ downloadProgress.message }}</p>
+      <p class="overlay-progress" *ngIf="downloadProgress.total > 0">
+        {{ downloadProgress.current }} of {{ downloadProgress.total }}
+      </p>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="page-header">
     <div class="header-content">
@@ -23,23 +34,6 @@
       </button>
     </div>
   </header>
-
-  <!-- Download Progress -->
-  <div class="download-progress" *ngIf="isDownloading() || downloadProgress.phase === 'complete' || downloadProgress.phase === 'error'">
-    <div class="progress-header">
-      <span class="progress-phase">{{ getProgressPhaseText() }}</span>
-      <span class="progress-percent">{{ downloadProgress.percentage }}%</span>
-    </div>
-    
-    <div class="progress-bar-container">
-      <div 
-        class="progress-bar"
-        [style.width.%]="downloadProgress.percentage"
-        [class.complete]="downloadProgress.phase === 'complete'"
-        [class.error]="downloadProgress.phase === 'error'">
-      </div>
-    </div>
-  </div>
 
   <!-- Empty State -->
   <div class="empty-state" *ngIf="queue.length === 0 && !isProcessing">

@@ -1,64 +1,34 @@
-// download.service.ts - Handles track downloads via Lambda API
+// download.service.ts - Client-side track downloads
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Track } from '../models';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
 import { DownloadQueueService } from './download-queue.service';
-import { environment } from 'src/environments/environment.prod';
+import { environment } from 'src/environments/environment';
+
+declare var JSZip: any;
 
 export interface DownloadProgress {
-  phase:
-    | 'idle'
-    | 'uploading'
-    | 'processing'
-    | 'downloading'
-    | 'complete'
-    | 'error';
+  active: boolean;
   message: string;
-  percentage: number;
-}
-
-export interface DownloadRequest {
-  tracks: {
-    id: string;
-    url: string;
-    title: string;
-    artist: string;
-  }[];
-}
-
-export interface DownloadResponse {
-  data: {
-    download_url: string;
-    expires_in: number;
-    total: number;
-    successful: number;
-    failed: { id: string; title: string; error: string }[];
-  };
-}
-
-export interface DownloadErrorResponse {
-  error: {
-    code: string;
-    message: string;
-  };
+  current: number;
+  total: number;
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class DownloadService {
-  private readonly xomcloudApi = `https://${environment.apiId}.execute-api.us-east-1.amazonaws.com/dev`;
   private readonly soundcloudApi = environment.apiBaseUrl;
-  private readonly xomcloudApiToken = environment.apiAuthToken;
-
+  
   private progress$ = new BehaviorSubject<DownloadProgress>({
-    phase: 'idle',
+    active: false,
     message: '',
-    percentage: 0,
+    current: 0,
+    total: 0
   });
 
   constructor(
@@ -68,29 +38,19 @@ export class DownloadService {
     private queueService: DownloadQueueService
   ) {}
 
-  // ==================== Progress Observable ====================
-
   getProgress$(): Observable<DownloadProgress> {
     return this.progress$.asObservable();
   }
 
-  private setProgress(
-    phase: DownloadProgress['phase'],
-    message: string,
-    percentage: number
-  ): void {
-    this.progress$.next({ phase, message, percentage });
+  private setProgress(active: boolean, message: string, current: number = 0, total: number = 0): void {
+    this.progress$.next({ active, message, current, total });
   }
 
-  private resetProgress(): void {
-    this.progress$.next({ phase: 'idle', message: '', percentage: 0 });
-  }
-
-  // ==================== Download via Lambda API ====================
+  // ==================== Main Download ====================
 
   async downloadQueue(): Promise<boolean> {
     const queue = this.queueService.getQueue();
-
+    
     if (queue.length === 0) {
       this.toastService.showNegativeToast('Your crate is empty');
       return false;
@@ -102,201 +62,189 @@ export class DownloadService {
     }
 
     this.queueService.setProcessing(true);
-
+    
     try {
-      // Phase 1: Prepare request
-      this.setProgress('uploading', 'Preparing tracks...', 10);
-
-      const request: DownloadRequest = {
-        tracks: queue.map((item) => ({
-          id: String(item.track.id),
-          url: item.track.permalink_url,
-          title: item.track.title,
-          artist: item.track.user?.username || 'Unknown Artist',
-        })),
-      };
-
-      // Phase 2: Send to Lambda
-      this.setProgress(
-        'processing',
-        `Processing ${queue.length} tracks...`,
-        30
-      );
-
-      const response = await this.callDownloadApi(request);
-
-      if (!response) {
-        throw new Error('No response from server');
+      // Load JSZip
+      if (typeof JSZip === 'undefined') {
+        this.setProgress(true, 'Preparing...', 0, queue.length);
+        await this.loadJSZip();
       }
 
-      // Phase 3: Download the zip
-      this.setProgress('downloading', 'Downloading zip file...', 70);
+      const zip = new JSZip();
+      const folder = zip.folder('xomcloud-tracks');
+      
+      let successCount = 0;
+      let failCount = 0;
 
-      await this.downloadFromUrl(response.data.download_url);
+      for (let i = 0; i < queue.length; i++) {
+        const item = queue[i];
+        const displayTitle = this.truncate(item.track.title, 35);
+        
+        this.setProgress(true, `Downloading: ${displayTitle}`, i + 1, queue.length);
 
-      // Phase 4: Complete
-      this.setProgress('complete', 'Download complete!', 100);
+        try {
+          const streamUrl = await firstValueFrom(this.getStreamUrl(item.track));
+          
+          if (streamUrl) {
+            const audioBlob = await this.fetchAudioBlob(streamUrl);
+            
+            if (audioBlob) {
+              const filename = this.sanitizeFilename(
+                `${item.track.user?.username || 'Unknown'} - ${item.track.title}`
+              ) + '.mp3';
+              folder.file(filename, audioBlob);
+              successCount++;
+            } else {
+              failCount++;
+            }
+          } else {
+            failCount++;
+          }
+        } catch (error) {
+          console.error(`Failed: ${item.track.title}`, error);
+          failCount++;
+        }
+      }
 
-      // Show results
-      const { successful, total, failed } = response.data;
-      if (failed.length > 0) {
-        this.toastService.showInfoToast(
-          `Downloaded ${successful}/${total} tracks. ${failed.length} failed.`
-        );
-        console.warn('Failed tracks:', failed);
+      if (successCount === 0) {
+        this.setProgress(false, '', 0, 0);
+        this.toastService.showNegativeToast('No tracks available for download');
+        return false;
+      }
+
+      this.setProgress(true, 'Creating zip file...', queue.length, queue.length);
+
+      const zipBlob = await zip.generateAsync({ 
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      });
+
+      const timestamp = new Date().toISOString().split('T')[0];
+      this.downloadBlob(zipBlob, `xomcloud-${timestamp}.zip`);
+
+      this.setProgress(false, '', 0, 0);
+      
+      if (failCount > 0) {
+        this.toastService.showInfoToast(`Downloaded ${successCount} tracks. ${failCount} unavailable.`);
       } else {
-        this.toastService.showPositiveToast(`Downloaded ${successful} tracks!`);
+        this.toastService.showPositiveToast(`Downloaded ${successCount} tracks!`);
       }
 
-      // Reset after delay
-      setTimeout(() => this.resetProgress(), 3000);
       return true;
+
     } catch (error) {
       console.error('Download failed:', error);
-      const message =
-        error instanceof Error ? error.message : 'Download failed';
-      this.setProgress('error', message, 0);
-      this.toastService.showNegativeToast(message);
-
-      setTimeout(() => this.resetProgress(), 5000);
+      this.setProgress(false, '', 0, 0);
+      this.toastService.showNegativeToast('Download failed. Please try again.');
       return false;
+      
     } finally {
       this.queueService.setProcessing(false);
     }
   }
 
-  private async callDownloadApi(
-    request: DownloadRequest
-  ): Promise<DownloadResponse> {
-    return new Promise((resolve, reject) => {
-      this.http
-        .post<DownloadResponse | DownloadErrorResponse>(
-          `${this.xomcloudApi}/download`,
-          request,
-          { headers: this.getApiHeaders() }
-        )
-        .subscribe({
-          next: (response) => {
-            if ('error' in response) {
-              reject(new Error(response.error.message));
-            } else {
-              resolve(response);
-            }
-          },
-          error: (err: HttpErrorResponse) => {
-            const message =
-              err.error?.error?.message || err.message || 'API request failed';
-            reject(new Error(message));
-          },
-        });
+  // ==================== Single Track ====================
+
+  downloadSingleTrack(track: Track): void {
+    this.toastService.showInfoToast(`Preparing "${this.truncate(track.title, 25)}"...`);
+    
+    this.getStreamUrl(track).subscribe({
+      next: (url) => {
+        if (url) {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = this.sanitizeFilename(track.title) + '.mp3';
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          this.toastService.showPositiveToast('Download started!');
+        } else {
+          this.toastService.showNegativeToast('Track not available for download');
+        }
+      },
+      error: () => {
+        this.toastService.showNegativeToast('Download failed');
+      }
     });
   }
 
-  private getApiHeaders(): { [key: string]: string } {
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${this.xomcloudApiToken}`,
-    };
-  }
-
-  private async downloadFromUrl(url: string): Promise<void> {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to download zip file');
-    }
-
-    const blob = await response.blob();
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `xomcloud-${timestamp}.zip`;
-
-    const downloadUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(downloadUrl);
-  }
-
-  // ==================== Single Track Download ====================
-
-  downloadSingleTrack(track: Track): void {
-    this.toastService.showInfoToast(`Preparing "${track.title}"...`);
-
-    const request: DownloadRequest = {
-      tracks: [
-        {
-          id: String(track.id),
-          url: track.permalink_url,
-          title: track.title,
-          artist: track.user?.username || 'Unknown Artist',
-        },
-      ],
-    };
-
-    this.http
-      .post<DownloadResponse | DownloadErrorResponse>(
-        `${this.xomcloudApi}/download`,
-        request,
-        { headers: this.getApiHeaders() }
-      )
-      .subscribe({
-        next: async (response) => {
-          if ('error' in response) {
-            this.toastService.showNegativeToast(response.error.message);
-            return;
-          }
-
-          try {
-            window.open(response.data.download_url, '_blank');
-            this.toastService.showPositiveToast('Download started!');
-          } catch (err) {
-            this.toastService.showNegativeToast('Failed to start download');
-          }
-        },
-        error: (err) => {
-          console.error('Single track download failed:', err);
-          this.toastService.showNegativeToast('Download failed');
-        },
-      });
-  }
-
-  // ==================== Stream URL (for playback) ====================
+  // ==================== Stream URL ====================
 
   getStreamUrl(track: Track): Observable<string | null> {
     if (track.media?.transcodings) {
       const progressive = track.media.transcodings.find(
-        (t) =>
-          t.format.protocol === 'progressive' &&
-          t.format.mime_type === 'audio/mpeg'
+        t => t.format.protocol === 'progressive' && t.format.mime_type === 'audio/mpeg'
       );
-
+      
       if (progressive) {
-        return this.http
-          .get<{ url: string }>(progressive.url, {
-            headers: this.authService.getAuthHeaders(),
-          })
-          .pipe(
-            map((response) => response.url),
-            catchError(() => this.fallbackStreamUrl(track.id))
-          );
+        return this.http.get<{ url: string }>(progressive.url, {
+          headers: this.authService.getAuthHeaders()
+        }).pipe(
+          map(response => response.url),
+          catchError(() => this.fallbackStreamUrl(track.id))
+        );
       }
     }
     return this.fallbackStreamUrl(track.id);
   }
 
   private fallbackStreamUrl(trackId: number): Observable<string | null> {
-    return this.http
-      .get<any>(`${this.soundcloudApi}/tracks/${trackId}/streams`, {
-        headers: this.authService.getAuthHeaders(),
-      })
-      .pipe(
-        map(
-          (response) =>
-            response.http_mp3_128_url || response.hls_mp3_128_url || null
-        ),
-        catchError(() => of(null))
-      );
+    return this.http.get<any>(`${this.soundcloudApi}/tracks/${trackId}/streams`, {
+      headers: this.authService.getAuthHeaders()
+    }).pipe(
+      map(response => response.http_mp3_128_url || response.hls_mp3_128_url || null),
+      catchError(() => of(null))
+    );
+  }
+
+  // ==================== Utilities ====================
+
+  private async fetchAudioBlob(url: string): Promise<Blob | null> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      return await response.blob();
+    } catch {
+      return null;
+    }
+  }
+
+  private downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  private async loadJSZip(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (typeof JSZip !== 'undefined') {
+        resolve();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load JSZip'));
+      document.head.appendChild(script);
+    });
+  }
+
+  private sanitizeFilename(name: string): string {
+    return name
+      .replace(/[<>:"/\\|?*]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .substring(0, 200);
+  }
+
+  private truncate(str: string, len: number): string {
+    return str.length > len ? str.substring(0, len - 3) + '...' : str;
   }
 }

@@ -1,12 +1,18 @@
-// Production environment configuration
+// Environment configuration
+// CI/CD replaces '---' placeholders via sed before production build
+// For local dev: copy to environment.local.ts with real values (gitignored)
 export const environment = {
-  production: true,
+  production: false,
   soundcloudClientId: '---',
   soundcloudClientSecret: '---',
   apiAuthToken: '---',
   apiId: '---',
-  baseCallbackUrl: 'https://xomcloud.com',
+  baseCallbackUrl: 'http://localhost:4200',
   apiBaseUrl: 'https://api.soundcloud.com',
   authBaseUrl: 'https://secure.soundcloud.com',
-  logoBase64: '', // Add your logo base64 here
+  get xomcloudApiUrl(): string {
+    return this.apiId === '---'
+      ? ''
+      : `https://${this.apiId}.execute-api.us-east-1.amazonaws.com/dev`;
+  },
 };
