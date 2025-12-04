@@ -53,6 +53,7 @@ export interface DownloadErrorResponse {
 export class DownloadService {
   private readonly xomcloudApi = `https://${environment.apiId}.execute-api.us-east-1.amazonaws.com/dev`;
   private readonly soundcloudApi = environment.apiBaseUrl;
+  private readonly xomcloudApiToken = environment.apiAuthToken;
 
   private progress$ = new BehaviorSubject<DownloadProgress>({
     phase: 'idle',
@@ -192,10 +193,9 @@ export class DownloadService {
   }
 
   private getApiHeaders(): { [key: string]: string } {
-    const token = this.authService.getAccessToken();
     return {
       'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : '',
+      Authorization: `Bearer ${this.xomcloudApiToken}`,
     };
   }
 
