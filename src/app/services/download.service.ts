@@ -51,7 +51,7 @@ export interface DownloadErrorResponse {
   providedIn: 'root',
 })
 export class DownloadService {
-  private readonly xomcloudApi = environment.apiId;
+  private readonly xomcloudApi = `https://${environment.apiId}.execute-api.us-east-1.amazonaws.com/dev`;
   private readonly soundcloudApi = environment.apiBaseUrl;
 
   private progress$ = new BehaviorSubject<DownloadProgress>({
@@ -170,7 +170,7 @@ export class DownloadService {
     return new Promise((resolve, reject) => {
       this.http
         .post<DownloadResponse | DownloadErrorResponse>(
-          `${this.xomcloudApi}/download/tracks`,
+          `${this.xomcloudApi}/download`,
           request,
           { headers: this.getApiHeaders() }
         )
@@ -237,7 +237,7 @@ export class DownloadService {
 
     this.http
       .post<DownloadResponse | DownloadErrorResponse>(
-        `${this.xomcloudApi}/download/tracks`,
+        `${this.xomcloudApi}/download`,
         request,
         { headers: this.getApiHeaders() }
       )
