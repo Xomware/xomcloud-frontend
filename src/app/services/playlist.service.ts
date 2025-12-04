@@ -59,7 +59,12 @@ export class PlaylistService {
         linked_partitioning: 'true'
       }
     }).pipe(
-      map(response => response.collection.map(item => item.playlist)),
+      map(response => {
+        // Filter out any null/undefined playlists
+        return response.collection
+          .filter(item => item && item.playlist)
+          .map(item => item.playlist);
+      }),
       tap(playlists => {
         this.likedPlaylists$.next(playlists);
       }),
@@ -224,14 +229,36 @@ export class PlaylistService {
   // ==================== Utility ====================
 
   getArtworkUrl(playlist: Playlist, size: 'large' | 'badge' | 't500x500' | 'crop' | 't300x300' | 't67x67' = 'large'): string {
-    if (!playlist.artwork_url) {
-      // Try to get artwork from first track
-      if (playlist.tracks?.length > 0 && playlist.tracks[0].artwork_url) {
-        return playlist.tracks[0].artwork_url.replace('large', size);
-      }
-      return playlist.user?.avatar_url || 'assets/img/default-artwork.png';
+    if (!playlist) {
+      return 'assets/img/default-artwork.png';
     }
-    return playlist.artwork_url.replace('large', size);
+    
+    let url = playlist.artwork_url;
+    
+    // If no artwork, try first track's artwork
+    if (!url && playlist.tracks?.length > 0 && playlist.tracks[0]?.artwork_url) {
+      url = playlist.tracks[0].artwork_url;
+    }
+    
+    // Final fallback to user avatar
+    if (!url) {
+      return playlist.user?.avatar_url?.replace('large', size) || 'assets/img/default-artwork.png';
+    }
+    
+    // Handle different SoundCloud URL formats
+    url = url.replace('-large', `-${size}`);
+    url = url.replace('-t500x500', `-${size}`);
+    url = url.replace('-crop', `-${size}`);
+    url = url.replace('-t300x300', `-${size}`);
+    url = url.replace('-t67x67', `-${size}`);
+    url = url.replace('-badge', `-${size}`);
+    
+    // If no size parameter found, try simple replacement
+    if (!url.includes(`-${size}`)) {
+      url = url.replace('large', size);
+    }
+    
+    return url;
   }
 
   getTotalDuration(playlist: Playlist): string {

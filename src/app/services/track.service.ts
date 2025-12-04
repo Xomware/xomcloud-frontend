@@ -56,14 +56,32 @@ export class TrackService {
   // ==================== Liked Tracks ====================
 
   getLikedTracks(limit: number = 50): Observable<Track[]> {
-    return this.http.get<LikedTrackCollection>(`${this.apiBaseUrl}/me/likes/tracks`, {
+    return this.http.get<any>(`${this.apiBaseUrl}/me/likes/tracks`, {
       headers: this.authService.getAuthHeaders(),
       params: {
         limit: limit.toString(),
         linked_partitioning: 'true'
       }
     }).pipe(
-      map(response => response.collection.map(item => item.track)),
+      map(response => {
+        console.log('Liked tracks API response:', response);
+        
+        if (!response.collection || !Array.isArray(response.collection)) {
+          console.warn('Invalid response structure:', response);
+          return [];
+        }
+        
+        // Handle both response formats:
+        // Format A: { collection: [{ track: {...} }] } - wrapped in track object
+        // Format B: { collection: [{...}] } - direct track objects
+        return response.collection
+          .filter((item: any) => item != null)
+          .map((item: any) => {
+            // If item has a 'track' property, use that; otherwise item IS the track
+            return item.track ? item.track : item;
+          })
+          .filter((track: any) => track != null && track.id != null);
+      }),
       tap(tracks => {
         this.likedTracks$.next(tracks);
         console.log(`Loaded ${tracks.length} liked tracks`);
@@ -204,10 +222,32 @@ export class TrackService {
   }
 
   getArtworkUrl(track: Track, size: 'large' | 'badge' | 't500x500' | 'crop' | 't300x300' | 't67x67' = 'large'): string {
-    if (!track.artwork_url) {
-      return track.user?.avatar_url || 'assets/img/default-artwork.png';
+    if (!track) {
+      return 'assets/img/default-artwork.png';
     }
-    return track.artwork_url.replace('large', size);
+    
+    if (!track.artwork_url) {
+      // Fallback to user avatar if no artwork
+      return track.user?.avatar_url?.replace('large', size) || 'assets/img/default-artwork.png';
+    }
+    
+    // Handle different SoundCloud URL formats
+    let url = track.artwork_url;
+    
+    // Replace size parameter in URL
+    url = url.replace('-large', `-${size}`);
+    url = url.replace('-t500x500', `-${size}`);
+    url = url.replace('-crop', `-${size}`);
+    url = url.replace('-t300x300', `-${size}`);
+    url = url.replace('-t67x67', `-${size}`);
+    url = url.replace('-badge', `-${size}`);
+    
+    // If no size parameter found, try simple replacement
+    if (!url.includes(`-${size}`)) {
+      url = url.replace('large', size);
+    }
+    
+    return url;
   }
 
   clearCache(): void {
