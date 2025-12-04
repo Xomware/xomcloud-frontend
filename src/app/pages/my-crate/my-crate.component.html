@@ -1,15 +1,4 @@
 <div class="crate-container">
-  <!-- Download Overlay -->
-  <div class="download-overlay" *ngIf="downloadProgress.active">
-    <div class="overlay-content">
-      <div class="spinner"></div>
-      <p class="overlay-message">{{ downloadProgress.message }}</p>
-      <p class="overlay-progress" *ngIf="downloadProgress.total > 0">
-        {{ downloadProgress.current }} of {{ downloadProgress.total }}
-      </p>
-    </div>
-  </div>
-
   <!-- Header -->
   <header class="page-header">
     <div class="header-content">
@@ -18,22 +7,46 @@
         My Crate
       </h1>
       <p class="crate-summary" *ngIf="queue.length > 0">
-        {{ queue.length }} track{{ queue.length !== 1 ? 's' : '' }} • {{ getTotalDuration() }}
+        {{ queue.length }} track{{ queue.length !== 1 ? "s" : "" }} •
+        {{ getTotalDuration() }}
       </p>
     </div>
-    
+
     <div class="header-actions" *ngIf="queue.length > 0 && !isProcessing">
-      <button class="clear-btn" (click)="clearQueue()">
-        Clear All
-      </button>
+      <button class="clear-btn" (click)="clearQueue()">Clear All</button>
       <button class="download-btn" (click)="startDownload()">
         <svg viewBox="0 0 24 24" width="20" height="20">
-          <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+          <path
+            fill="currentColor"
+            d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
+          />
         </svg>
         Download All
       </button>
     </div>
   </header>
+
+  <!-- Download Progress Bar -->
+  <div class="download-progress" *ngIf="isDownloading()">
+    <div class="progress-info">
+      <div class="progress-status">
+        <span class="progress-message">{{ downloadProgress.message }}</span>
+        <span class="progress-percent">{{ downloadProgress.percentage }}%</span>
+      </div>
+      <div class="progress-track" *ngIf="downloadProgress.currentTrack">
+        {{ downloadProgress.currentTrack }}
+      </div>
+    </div>
+
+    <div class="progress-bar-container">
+      <div
+        class="progress-bar"
+        [style.width.%]="downloadProgress.percentage"
+        [class.complete]="downloadProgress.phase === 'complete'"
+        [class.error]="downloadProgress.phase === 'error'"
+      ></div>
+    </div>
+  </div>
 
   <!-- Empty State -->
   <div class="empty-state" *ngIf="queue.length === 0 && !isProcessing">
@@ -50,42 +63,53 @@
 
   <!-- Crate Contents -->
   <div class="crate-list" *ngIf="queue.length > 0">
-    <div 
+    <div
       class="crate-item"
       *ngFor="let item of queue; let i = index"
-      [class.processing]="isProcessing">
-      
+      [class.processing]="isProcessing"
+    >
       <span class="item-number">{{ i + 1 }}</span>
-      
+
       <div class="item-artwork">
-        <img 
-          [src]="getArtworkUrl(item.track)" 
+        <img
+          [src]="getArtworkUrl(item.track)"
           [alt]="item.track.title"
-          (error)="onImageError($event, 'assets/img/default-artwork.png')">
+          (error)="onImageError($event, 'assets/img/default-artwork.png')"
+        />
       </div>
-      
+
       <div class="item-info">
         <h3 class="item-title">{{ item.track.title }}</h3>
         <p class="item-artist">{{ item.track.user.username }}</p>
       </div>
-      
-      <span class="item-duration">{{ formatDuration(item.track.duration) }}</span>
-      
+
+      <span class="item-duration">{{
+        formatDuration(item.track.duration)
+      }}</span>
+
       <div class="item-actions" *ngIf="!isProcessing">
-        <button 
+        <button
           class="single-download-btn"
           (click)="downloadSingleTrack(item.track)"
-          title="Download this track">
+          title="Download this track"
+        >
           <svg viewBox="0 0 24 24" width="18" height="18">
-            <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            <path
+              fill="currentColor"
+              d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
+            />
           </svg>
         </button>
-        <button 
+        <button
           class="remove-btn"
           (click)="removeFromQueue(item.track.id)"
-          title="Remove from crate">
+          title="Remove from crate"
+        >
           <svg viewBox="0 0 24 24" width="18" height="18">
-            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            <path
+              fill="currentColor"
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+            />
           </svg>
         </button>
       </div>
@@ -100,7 +124,10 @@
     </div>
     <button class="bar-download-btn" (click)="startDownload()">
       <svg viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+        <path
+          fill="currentColor"
+          d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
+        />
       </svg>
       Download
     </button>

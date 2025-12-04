@@ -3,26 +3,33 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Track } from '../../models';
-import { 
-  DownloadQueueService, 
+import {
+  DownloadQueueService,
   QueuedTrack,
   DownloadService,
   DownloadProgress,
   TrackService,
-  ToastService 
+  ToastService,
 } from '../../services';
 
 @Component({
   selector: 'app-my-crate',
   templateUrl: './my-crate.component.html',
-  styleUrls: ['./my-crate.component.scss']
+  styleUrls: ['./my-crate.component.scss'],
 })
 export class MyCrateComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   queue: QueuedTrack[] = [];
   isProcessing = false;
-  downloadProgress: DownloadProgress = { active: false, message: '', current: 0, total: 0 };
+  downloadProgress: DownloadProgress = {
+    phase: 'idle',
+    message: '',
+    currentTrack: '',
+    current: 0,
+    total: 0,
+    percentage: 0,
+  };
 
   constructor(
     private queueService: DownloadQueueService,
@@ -33,23 +40,26 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Subscribe to queue changes
-    this.queueService.getQueue$()
+    this.queueService
+      .getQueue$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(queue => {
+      .subscribe((queue) => {
         this.queue = queue;
       });
 
     // Subscribe to processing state
-    this.queueService.getIsProcessing$()
+    this.queueService
+      .getIsProcessing$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(isProcessing => {
+      .subscribe((isProcessing) => {
         this.isProcessing = isProcessing;
       });
 
     // Subscribe to download progress
-    this.downloadService.getProgress$()
+    this.downloadService
+      .getProgress$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(progress => {
+      .subscribe((progress) => {
         this.downloadProgress = progress;
       });
   }
@@ -67,7 +77,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   clearQueue(): void {
     if (this.queue.length === 0) return;
-    
+
     if (confirm('Are you sure you want to clear your entire crate?')) {
       this.queueService.clearQueue();
     }
@@ -103,5 +113,13 @@ export class MyCrateComponent implements OnInit, OnDestroy {
     if (target) {
       target.src = fallbackSrc;
     }
+  }
+
+  isDownloading(): boolean {
+    return (
+      this.downloadProgress.phase !== 'idle' &&
+      this.downloadProgress.phase !== 'complete' &&
+      this.downloadProgress.phase !== 'error'
+    );
   }
 }

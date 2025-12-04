@@ -13,10 +13,11 @@ import { DownloadQueueService } from '../../services/download-queue.service';
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   dropdownVisible = false;
   isMobile: boolean = false;
   queueCount = 0;
+  isCallbackPage = false;
 
   constructor(
     private authService: AuthService,
@@ -24,15 +25,20 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     private queueService: DownloadQueueService
   ) {
     this.checkIfMobile();
+    this.checkIfCallbackPage();
   }
 
   ngOnInit(): void {
     window.addEventListener('resize', this.checkIfMobile.bind(this));
-    
-    // Subscribe to queue count
-    this.queueService.getQueue$()
+    this.router.events
       .pipe(takeUntil(this.destroy$))
-      .subscribe(queue => {
+      .subscribe(() => this.checkIfCallbackPage());
+
+    // Subscribe to queue count
+    this.queueService
+      .getQueue$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((queue) => {
         this.queueCount = queue.length;
       });
   }
@@ -40,6 +46,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private checkIfCallbackPage(): void {
+    this.isCallbackPage = this.router.url.includes('callback');
   }
 
   toggleDropdown(): void {

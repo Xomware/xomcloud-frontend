@@ -7,50 +7,66 @@
   position: relative;
 }
 
-// Download Overlay
-.download-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(10, 10, 20, 0.95);
+// Download Progress Bar
+.download-progress {
+  background: rgba(138, 43, 226, 0.1);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.progress-info {
+  margin-bottom: 12px;
+}
+
+.progress-status {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  backdrop-filter: blur(8px);
+  margin-bottom: 4px;
 }
 
-.overlay-content {
-  text-align: center;
+.progress-message {
   color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
-.spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(138, 43, 226, 0.2);
-  border-top-color: #8a2be2;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 24px;
+.progress-percent {
+  color: #8a2be2;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.progress-track {
+  color: #b0b0c0;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.overlay-message {
-  font-size: 1.2rem;
-  margin: 0 0 8px 0;
-  color: #fff;
+.progress-bar-container {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.overlay-progress {
-  font-size: 1rem;
-  margin: 0;
-  color: #8a8a9a;
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #8a2be2 0%, #a855f7 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+
+  &.complete {
+    background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
+  }
+
+  &.error {
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+  }
 }
 
 // Page Header
@@ -71,12 +87,12 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     .crate-icon {
       font-size: 1.6rem;
     }
   }
-  
+
   .crate-summary {
     color: #8a8a9a;
     font-size: 1rem;
@@ -99,7 +115,7 @@
   background: rgba(255, 255, 255, 0.1);
   color: #b0b0c0;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.15);
     color: #fff;
@@ -120,7 +136,7 @@
   color: #fff;
   border: none;
   box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
@@ -129,7 +145,11 @@
 
 // Download Progress
 .download-progress {
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(247, 147, 30, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 53, 0.1) 0%,
+    rgba(247, 147, 30, 0.05) 100%
+  );
   border: 1px solid rgba(255, 107, 53, 0.2);
   border-radius: 16px;
   padding: 24px;
@@ -141,12 +161,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  
+
   .progress-phase {
     color: #fff;
     font-weight: 500;
   }
-  
+
   .progress-count,
   .progress-percent {
     color: #8a8a9a;
@@ -166,11 +186,11 @@
   background: linear-gradient(90deg, #ff6b35 0%, #f7931e 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
-  
+
   &.complete {
     background: linear-gradient(90deg, #1db954 0%, #1ed760 100%);
   }
-  
+
   &.error {
     background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
   }
@@ -193,22 +213,22 @@
   justify-content: center;
   min-height: 400px;
   text-align: center;
-  
+
   .empty-visual {
     margin-bottom: 24px;
-    
+
     .empty-icon {
       font-size: 5rem;
       opacity: 0.7;
     }
   }
-  
+
   h2 {
     color: #fff;
     font-size: 1.5rem;
     margin: 0 0 12px 0;
   }
-  
+
   p {
     color: #8a8a9a;
     font-size: 1rem;
@@ -234,7 +254,7 @@
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  
+
   &:hover {
     background: rgba(255, 107, 53, 0.2);
     border-color: #ff6b35;
@@ -257,11 +277,11 @@
   background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.08);
   }
-  
+
   &.processing {
     opacity: 0.6;
     pointer-events: none;
@@ -282,7 +302,7 @@
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
-  
+
   img {
     width: 100%;
     height: 100%;
@@ -293,7 +313,7 @@
 .item-info {
   flex: 1;
   min-width: 0;
-  
+
   .item-title {
     font-size: 0.95rem;
     color: #fff;
@@ -303,7 +323,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   .item-artist {
     font-size: 0.85rem;
     color: #8a8a9a;
@@ -339,7 +359,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
@@ -377,12 +397,12 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  
+
   .bar-count {
     color: #fff;
     font-weight: 500;
   }
-  
+
   .bar-duration {
     color: #8a8a9a;
     font-size: 0.85rem;
@@ -408,34 +428,34 @@
   .crate-container {
     padding: 80px 16px 200px;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .header-actions {
     display: none;
   }
-  
+
   .mobile-action-bar {
     display: flex;
   }
-  
+
   .crate-item {
     padding: 10px 12px;
     gap: 12px;
   }
-  
+
   .item-number {
     display: none;
   }
-  
+
   .item-artwork {
     width: 44px;
     height: 44px;
   }
-  
+
   .item-duration {
     display: none;
   }
