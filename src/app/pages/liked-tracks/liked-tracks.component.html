@@ -1,16 +1,16 @@
-<app-loader [loading]="loading" message="Loading your liked tracks..."></app-loader>
+<app-loader [loading]="loading" message="Loading tracks..."></app-loader>
 
-<div class="liked-tracks-container" *ngIf="!loading">
+<div class="liked-container" *ngIf="!loading">
   <!-- Header -->
   <header class="page-header">
     <div class="header-content">
-      <h1>Liked Tracks</h1>
+      <h1>{{ getPageTitle() }}</h1>
       <p class="track-count" *ngIf="tracks.length > 0">{{ tracks.length }} tracks</p>
     </div>
     
-    <div class="header-actions">
+    <div class="header-actions" *ngIf="tracks.length > 0">
       <button 
-        class="action-btn"
+        class="select-btn" 
         [class.active]="selectionMode"
         (click)="toggleSelectionMode()">
         {{ selectionMode ? 'Cancel' : 'Select' }}
@@ -19,7 +19,7 @@
       <ng-container *ngIf="selectionMode">
         <button class="action-btn" (click)="selectAll()">Select All</button>
         <button 
-          class="action-btn primary"
+          class="action-btn primary" 
           [disabled]="selectedTracks.size === 0"
           (click)="addSelectedToQueue()">
           Add {{ selectedTracks.size }} to Crate
@@ -31,37 +31,41 @@
   <!-- Error State -->
   <div class="error-state" *ngIf="error">
     <span class="error-icon">⚠️</span>
-    <h2>{{ error }}</h2>
+    <p>{{ error }}</p>
     <button class="retry-btn" (click)="loadTracks()">Try Again</button>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!error && tracks.length === 0">
-    <span class="empty-icon">💔</span>
-    <h2>No liked tracks yet</h2>
-    <p>Start liking tracks on SoundCloud and they'll appear here.</p>
+  <!-- Private State -->
+  <div class="empty-state" *ngIf="isPrivate && !error">
+    <span class="empty-icon">🔒</span>
+    <h2>Private Likes</h2>
+    <p>This user's liked tracks are private.</p>
   </div>
 
-  <!-- Tracks List -->
-  <div class="tracks-list" *ngIf="tracks.length > 0">
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="tracks.length === 0 && !error && !isPrivate">
+    <span class="empty-icon">💔</span>
+    <h2>No liked tracks</h2>
+    <p *ngIf="isOwnLikes">Start liking tracks on SoundCloud to see them here.</p>
+    <p *ngIf="!isOwnLikes">This user hasn't liked any public tracks yet.</p>
+  </div>
+
+  <!-- Tracks Grid -->
+  <div class="tracks-grid" *ngIf="tracks.length > 0">
     <div 
-      class="track-item"
-      *ngFor="let track of tracks; let i = index"
+      class="track-card"
+      *ngFor="let track of tracks"
       [class.selected]="isSelected(track.id)"
       [class.in-queue]="isInQueue(track.id)"
       (click)="selectionMode ? toggleTrackSelection(track.id) : null">
       
       <!-- Selection Checkbox -->
       <div class="selection-checkbox" *ngIf="selectionMode">
-        <div class="checkbox" [class.checked]="isSelected(track.id)">
-          <svg *ngIf="isSelected(track.id)" viewBox="0 0 24 24" width="16" height="16">
-            <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-          </svg>
-        </div>
+        <input 
+          type="checkbox" 
+          [checked]="isSelected(track.id)"
+          (change)="toggleTrackSelection(track.id)">
       </div>
-
-      <!-- Track Number -->
-      <span class="track-number" *ngIf="!selectionMode">{{ i + 1 }}</span>
       
       <!-- Artwork -->
       <div class="track-artwork">
@@ -69,9 +73,9 @@
           [src]="getArtworkUrl(track)" 
           [alt]="track.title"
           (error)="onImageError($event, 'assets/img/default-artwork.png')">
-        <div class="play-overlay">
-          <svg viewBox="0 0 24 24" width="24" height="24">
-            <path fill="currentColor" d="M8 5v14l11-7z"/>
+        <div class="queue-badge" *ngIf="isInQueue(track.id)">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
           </svg>
         </div>
       </div>
@@ -79,31 +83,42 @@
       <!-- Track Info -->
       <div class="track-info">
         <h3 class="track-title">{{ track.title }}</h3>
-        <p class="track-artist">{{ track.user.username }}</p>
-      </div>
-      
-      <!-- Track Meta -->
-      <div class="track-meta">
-        <span class="duration">{{ formatDuration(track.duration) }}</span>
-        <span class="plays">{{ formatPlayCount(track.playback_count) }} plays</span>
+        <p class="track-artist">
+          <a [routerLink]="['/user-profile']" [queryParams]="{id: track.user.id}">
+            {{ track.user.username }}
+          </a>
+        </p>
+        <div class="track-meta">
+          <span class="duration">{{ formatDuration(track.duration) }}</span>
+          <span class="plays" *ngIf="track.playback_count">
+            {{ formatPlayCount(track.playback_count) }} plays
+          </span>
+        </div>
       </div>
       
       <!-- Actions -->
       <div class="track-actions" *ngIf="!selectionMode">
         <button 
-          class="add-to-queue-btn"
+          class="add-btn"
           [class.in-queue]="isInQueue(track.id)"
           [disabled]="isInQueue(track.id)"
           (click)="addToQueue(track); $event.stopPropagation()"
           [title]="isInQueue(track.id) ? 'Already in crate' : 'Add to crate'">
-          <svg *ngIf="!isInQueue(track.id)" viewBox="0 0 24 24" width="20" height="20">
+          <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          <svg *ngIf="isInQueue(track.id)" viewBox="0 0 24 24" width="20" height="20">
-            <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
           </svg>
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- Load More Button -->
+  <div class="load-more-container" *ngIf="hasMore && !loading">
+    <button 
+      class="load-more-btn" 
+      (click)="loadMore()"
+      [disabled]="loadingMore">
+      {{ loadingMore ? 'Loading...' : 'Load More' }}
+    </button>
   </div>
 </div>

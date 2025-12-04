@@ -1,48 +1,27 @@
-<div class="toolbar" [ngClass]="{ 'show-dropdown': dropdownVisible }" *ngIf="!isCallbackPage">
-  <a routerLink="/home" class="app-title">
-    <img
-      src="assets/img/xomcloud-banner-transparent.png"
-      alt="XOMCLOUD"
+<div class="toolbar" [ngClass]="{'show-dropdown': dropdownVisible}" *ngIf="!isHiddenPage">
+  <a routerLink="/my-profile" class="app-title" *ngIf="isLoggedIn()">
+    <img 
+      src="assets/img/xomcloud-banner-transparent.png" 
+      alt="XOMCLOUD" 
       class="logo-image"
-    />
+      (error)="onLogoError($event)">
   </a>
 
-  <div class="tabs" [ngClass]="{ hidden: dropdownVisible }">
+  <div class="tabs" [ngClass]="{'hidden': dropdownVisible}">
     <div *ngIf="isLoggedIn()">
-      <a
-        routerLink="/my-profile"
-        routerLinkActive="active"
-        [ngClass]="{ selected: isSelected('/my-profile') }"
-      >
+      <a routerLink="/my-profile" routerLinkActive="active" [ngClass]="{'selected': isSelected('/my-profile')}">
         My Profile
       </a>
-      <a
-        routerLink="/liked-tracks"
-        routerLinkActive="active"
-        [ngClass]="{ selected: isSelected('/liked-tracks') }"
-      >
+      <a routerLink="/liked-tracks" routerLinkActive="active" [ngClass]="{'selected': isSelected('/liked-tracks')}">
         Liked Tracks
       </a>
-      <a
-        routerLink="/playlists"
-        routerLinkActive="active"
-        [ngClass]="{ selected: isSelected('/playlists') }"
-      >
+      <a routerLink="/playlists" routerLinkActive="active" [ngClass]="{'selected': isSelected('/playlists')}">
         Playlists
       </a>
-      <a
-        routerLink="/search"
-        routerLinkActive="active"
-        [ngClass]="{ selected: isSelected('/search') }"
-      >
+      <a routerLink="/search" routerLinkActive="active" [ngClass]="{'selected': isSelected('/search')}">
         Search
       </a>
-      <a
-        routerLink="/my-crate"
-        routerLinkActive="active"
-        [ngClass]="{ selected: isSelected('/my-crate') }"
-        class="crate-link"
-      >
+      <a routerLink="/my-crate" routerLinkActive="active" [ngClass]="{'selected': isSelected('/my-crate')}" class="crate-link">
         My Crate
         <span class="crate-badge" *ngIf="queueCount > 0">{{ queueCount }}</span>
       </a>
@@ -50,11 +29,7 @@
   </div>
 
   <!-- Logout Button (Desktop) -->
-  <button
-    class="logout-btn desktop-only"
-    *ngIf="isLoggedIn()"
-    (click)="logout()"
-  >
+  <button class="logout-btn desktop-only" *ngIf="isLoggedIn()" (click)="logout()">
     Logout
   </button>
 
@@ -65,36 +40,11 @@
 
   <!-- Mobile Dropdown Menu -->
   <div class="dropdown" *ngIf="dropdownVisible">
-    <a
-      routerLink="/my-profile"
-      routerLinkActive="active"
-      (click)="selectItem('/my-profile')"
-      >My Profile</a
-    >
-    <a
-      routerLink="/liked-tracks"
-      routerLinkActive="active"
-      (click)="selectItem('/liked-tracks')"
-      >Liked Tracks</a
-    >
-    <a
-      routerLink="/playlists"
-      routerLinkActive="active"
-      (click)="selectItem('/playlists')"
-      >Playlists</a
-    >
-    <a
-      routerLink="/search"
-      routerLinkActive="active"
-      (click)="selectItem('/search')"
-      >Search</a
-    >
-    <a
-      routerLink="/my-crate"
-      routerLinkActive="active"
-      (click)="selectItem('/my-crate')"
-      class="crate-link"
-    >
+    <a routerLink="/my-profile" routerLinkActive="active" (click)="selectItem('/my-profile')">My Profile</a>
+    <a routerLink="/liked-tracks" routerLinkActive="active" (click)="selectItem('/liked-tracks')">Liked Tracks</a>
+    <a routerLink="/playlists" routerLinkActive="active" (click)="selectItem('/playlists')">Playlists</a>
+    <a routerLink="/search" routerLinkActive="active" (click)="selectItem('/search')">Search</a>
+    <a routerLink="/my-crate" routerLinkActive="active" (click)="selectItem('/my-crate')" class="crate-link">
       My Crate
       <span class="crate-badge" *ngIf="queueCount > 0">{{ queueCount }}</span>
     </a>

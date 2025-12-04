@@ -1,16 +1,17 @@
 // track.service.ts - SoundCloud Track API Service
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import {
-  Track,
-  TrackCollection,
-  LikedTrack,
-  LikedTrackCollection,
-} from '../models';
+import { Track, TrackCollection } from '../models';
 import { AuthService } from './auth.service';
+
+export interface PaginatedTracks {
+  tracks: Track[];
+  nextUrl: string | null;
+  hasMore: boolean;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -46,10 +47,7 @@ export class TrackService {
             this.userTracks$.next(tracks);
           }
         }),
-        catchError((error) => {
-          console.error('Failed to fetch user tracks:', error);
-          return throwError(() => error);
-        })
+        catchError((error) => this.handleError(error, 'fetch user tracks'))
       );
   }
 
@@ -57,46 +55,109 @@ export class TrackService {
     return this.userTracks$.asObservable();
   }
 
-  // ==================== Liked Tracks ====================
+  // ==================== Liked Tracks (Paginated) ====================
 
   getLikedTracks(limit: number = 50): Observable<Track[]> {
-    return this.http
-      .get<any>(`${this.apiBaseUrl}/me/likes/tracks`, {
-        headers: this.authService.getAuthHeaders(),
-        params: {
-          limit: limit.toString(),
-          linked_partitioning: 'true',
-        },
+    return this.getLikedTracksPaginated(limit).pipe(
+      map((result) => result.tracks)
+    );
+  }
+
+  getLikedTracksPaginated(
+    limit: number = 50,
+    nextUrl?: string
+  ): Observable<PaginatedTracks> {
+    const url = nextUrl || `${this.apiBaseUrl}/me/likes/tracks`;
+
+    const request = nextUrl
+      ? this.http.get<any>(url, { headers: this.authService.getAuthHeaders() })
+      : this.http.get<any>(url, {
+          headers: this.authService.getAuthHeaders(),
+          params: {
+            limit: limit.toString(),
+            linked_partitioning: 'true',
+          },
+        });
+
+    return request.pipe(
+      map((response) => {
+        const tracks = this.extractTracks(response);
+        return {
+          tracks,
+          nextUrl: response.next_href || null,
+          hasMore: !!response.next_href,
+        };
+      }),
+      tap((result) => {
+        if (!nextUrl) {
+          this.likedTracks$.next(result.tracks);
+        }
+      }),
+      catchError((error) => this.handleError(error, 'fetch liked tracks'))
+    );
+  }
+
+  // ==================== Other User's Liked Tracks ====================
+
+  getUserLikedTracks(userId: number, limit: number = 50): Observable<Track[]> {
+    return this.getUserLikedTracksPaginated(userId, limit).pipe(
+      map((result) => result.tracks)
+    );
+  }
+
+  getUserLikedTracksPaginated(
+    userId: number,
+    limit: number = 50,
+    nextUrl?: string
+  ): Observable<PaginatedTracks> {
+    const url = nextUrl || `${this.apiBaseUrl}/users/${userId}/likes/tracks`;
+
+    const request = nextUrl
+      ? this.http.get<any>(url, { headers: this.authService.getAuthHeaders() })
+      : this.http.get<any>(url, {
+          headers: this.authService.getAuthHeaders(),
+          params: {
+            limit: limit.toString(),
+            linked_partitioning: 'true',
+          },
+        });
+
+    return request.pipe(
+      map((response) => {
+        const tracks = this.extractTracks(response);
+        return {
+          tracks,
+          nextUrl: response.next_href || null,
+          hasMore: !!response.next_href,
+        };
+      }),
+      catchError((error) => {
+        // Check if it's a privacy error (403)
+        if (error.status === 403) {
+          return of({ tracks: [], nextUrl: null, hasMore: false });
+        }
+        return this.handleError(error, 'fetch user liked tracks');
       })
-      .pipe(
-        map((response) => {
-          console.log('Liked tracks API response:', response);
+    );
+  }
 
-          if (!response.collection || !Array.isArray(response.collection)) {
-            console.warn('Invalid response structure:', response);
-            return [];
-          }
+  // ==================== Extract tracks from response ====================
 
-          // Handle both response formats:
-          // Format A: { collection: [{ track: {...} }] } - wrapped in track object
-          // Format B: { collection: [{...}] } - direct track objects
-          return response.collection
-            .filter((item: any) => item != null)
-            .map((item: any) => {
-              // If item has a 'track' property, use that; otherwise item IS the track
-              return item.track ? item.track : item;
-            })
-            .filter((track: any) => track != null && track.id != null);
-        }),
-        tap((tracks) => {
-          this.likedTracks$.next(tracks);
-          console.log(`Loaded ${tracks.length} liked tracks`);
-        }),
-        catchError((error) => {
-          console.error('Failed to fetch liked tracks:', error);
-          return throwError(() => error);
-        })
-      );
+  private extractTracks(response: any): Track[] {
+    if (!response.collection || !Array.isArray(response.collection)) {
+      console.warn('Invalid response structure:', response);
+      return [];
+    }
+
+    return response.collection
+      .filter((item: any) => item != null)
+      .map((item: any) => {
+        // Handle both response formats:
+        // Format A: { collection: [{ track: {...} }] } - wrapped in track object
+        // Format B: { collection: [{...}] } - direct track objects
+        return item.track ? item.track : item;
+      })
+      .filter((track: any) => track != null && track.id != null);
   }
 
   getLikedTracks$(): Observable<Track[]> {
@@ -112,10 +173,7 @@ export class TrackService {
       })
       .pipe(
         tap(() => console.log(`Liked track ${trackId}`)),
-        catchError((error) => {
-          console.error(`Failed to like track ${trackId}:`, error);
-          return throwError(() => error);
-        })
+        catchError((error) => this.handleError(error, 'like track'))
       );
   }
 
@@ -126,10 +184,7 @@ export class TrackService {
       })
       .pipe(
         tap(() => console.log(`Unliked track ${trackId}`)),
-        catchError((error) => {
-          console.error(`Failed to unlike track ${trackId}:`, error);
-          return throwError(() => error);
-        })
+        catchError((error) => this.handleError(error, 'unlike track'))
       );
   }
 
@@ -140,12 +195,7 @@ export class TrackService {
       .get<Track>(`${this.apiBaseUrl}/tracks/${trackId}`, {
         headers: this.authService.getAuthHeaders(),
       })
-      .pipe(
-        catchError((error) => {
-          console.error(`Failed to fetch track ${trackId}:`, error);
-          return throwError(() => error);
-        })
-      );
+      .pipe(catchError((error) => this.handleError(error, 'fetch track')));
   }
 
   resolveTrackUrl(url: string): Observable<Track> {
@@ -155,10 +205,7 @@ export class TrackService {
         params: { url },
       })
       .pipe(
-        catchError((error) => {
-          console.error(`Failed to resolve track URL ${url}:`, error);
-          return throwError(() => error);
-        })
+        catchError((error) => this.handleError(error, 'resolve track URL'))
       );
   }
 
@@ -208,10 +255,7 @@ export class TrackService {
       })
       .pipe(
         map((response) => response.collection),
-        catchError((error) => {
-          console.error('Track search failed:', error);
-          return throwError(() => error);
-        })
+        catchError((error) => this.handleError(error, 'search tracks'))
       );
   }
 
@@ -224,16 +268,9 @@ export class TrackService {
       })
       .pipe(
         map((response) => {
-          // Return the HTTP progressive stream URL if available
           return response.http_mp3_128_url || response.hls_mp3_128_url || null;
         }),
-        catchError((error) => {
-          console.error(
-            `Failed to get stream URL for track ${trackId}:`,
-            error
-          );
-          return throwError(() => error);
-        })
+        catchError((error) => this.handleError(error, 'get stream URL'))
       );
   }
 
@@ -261,17 +298,13 @@ export class TrackService {
     }
 
     if (!track.artwork_url) {
-      // Fallback to user avatar if no artwork
       return (
         track.user?.avatar_url?.replace('large', size) ||
         'assets/img/default-artwork.png'
       );
     }
 
-    // Handle different SoundCloud URL formats
     let url = track.artwork_url;
-
-    // Replace size parameter in URL
     url = url.replace('-large', `-${size}`);
     url = url.replace('-t500x500', `-${size}`);
     url = url.replace('-crop', `-${size}`);
@@ -279,7 +312,6 @@ export class TrackService {
     url = url.replace('-t67x67', `-${size}`);
     url = url.replace('-badge', `-${size}`);
 
-    // If no size parameter found, try simple replacement
     if (!url.includes(`-${size}`)) {
       url = url.replace('large', size);
     }
@@ -290,5 +322,15 @@ export class TrackService {
   clearCache(): void {
     this.likedTracks$.next([]);
     this.userTracks$.next([]);
+  }
+
+  // ==================== Error Handling ====================
+
+  private handleError(
+    error: HttpErrorResponse,
+    operation: string
+  ): Observable<never> {
+    console.error(`Failed to ${operation}:`, error);
+    return throwError(() => error);
   }
 }

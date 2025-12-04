@@ -23,7 +23,7 @@
             [src]="getAvatarUrl('t500x500')"
             [alt]="user.username"
             class="avatar"
-            (error)="onImageError($event, 'assets/img/default-avatar.svg')"
+            (error)="onImageError($event, 'assets/img/default-avatar.png')"
           />
         </div>
 
@@ -61,17 +61,39 @@
           <span class="stat-value">{{ formatNumber(stats.followings) }}</span>
           <span class="stat-label">Following</span>
         </a>
+        <a
+          class="stat-card clickable"
+          [class.private]="likesPrivate"
+          (click)="goToLikes()"
+        >
+          <span class="stat-value">{{ formatNumber(stats.likes) }}</span>
+          <span class="stat-label">Likes {{ likesPrivate ? "🔒" : "" }}</span>
+        </a>
       </div>
     </section>
 
     <section class="bio-section" *ngIf="user.description">
       <h2 class="section-title">About</h2>
-      <p class="bio-text">{{ user.description }}</p>
+      <div class="bio-container" [class.expanded]="bioExpanded">
+        <p class="bio-text">{{ user.description }}</p>
+        <div
+          class="bio-fade"
+          *ngIf="!bioExpanded && user.description.length > 200"
+        ></div>
+      </div>
+      <button
+        class="bio-toggle"
+        *ngIf="user.description.length > 200"
+        (click)="bioExpanded = !bioExpanded"
+      >
+        {{ bioExpanded ? "Show Less" : "Show More" }}
+      </button>
     </section>
 
+    <!-- User's Tracks -->
     <section class="tracks-section" *ngIf="recentTracks.length > 0">
       <div class="section-header">
-        <h2 class="section-title">Recent Tracks</h2>
+        <h2 class="section-title">Tracks</h2>
         <a (click)="goToTracks()" class="view-all">View All →</a>
       </div>
 
@@ -83,11 +105,37 @@
               [alt]="track.title"
               (error)="onImageError($event, 'assets/img/default-artwork.png')"
             />
-            <div class="play-overlay">
-              <svg viewBox="0 0 24 24" width="32" height="32">
-                <path fill="currentColor" d="M8 5v14l11-7z" />
+            <button
+              class="add-to-crate-btn"
+              [class.in-crate]="isInQueue(track.id)"
+              (click)="addToQueue(track); $event.stopPropagation()"
+              [title]="
+                isInQueue(track.id) ? 'Already in crate' : 'Add to crate'
+              "
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                *ngIf="!isInQueue(track.id)"
+              >
+                <path
+                  fill="currentColor"
+                  d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
+                />
               </svg>
-            </div>
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                *ngIf="isInQueue(track.id)"
+              >
+                <path
+                  fill="currentColor"
+                  d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                />
+              </svg>
+            </button>
           </div>
           <div class="track-info">
             <h3 class="track-title">{{ track.title }}</h3>
@@ -97,6 +145,70 @@
       </div>
     </section>
 
+    <!-- User's Liked Tracks -->
+    <section class="tracks-section" *ngIf="likedTracks.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">Liked Tracks</h2>
+        <a (click)="goToLikes()" class="view-all">View All →</a>
+      </div>
+
+      <div class="tracks-grid">
+        <div class="track-card" *ngFor="let track of likedTracks">
+          <div class="track-artwork">
+            <img
+              [src]="getTrackArtwork(track)"
+              [alt]="track.title"
+              (error)="onImageError($event, 'assets/img/default-artwork.png')"
+            />
+            <button
+              class="add-to-crate-btn"
+              [class.in-crate]="isInQueue(track.id)"
+              (click)="addToQueue(track); $event.stopPropagation()"
+              [title]="
+                isInQueue(track.id) ? 'Already in crate' : 'Add to crate'
+              "
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                *ngIf="!isInQueue(track.id)"
+              >
+                <path
+                  fill="currentColor"
+                  d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
+                />
+              </svg>
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                *ngIf="isInQueue(track.id)"
+              >
+                <path
+                  fill="currentColor"
+                  d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                />
+              </svg>
+            </button>
+          </div>
+          <div class="track-info">
+            <h3 class="track-title">{{ track.title }}</h3>
+            <p class="track-artist">{{ track.user.username }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Private Likes Message -->
+    <section class="private-section" *ngIf="likesPrivate && stats.likes > 0">
+      <div class="private-message">
+        <span class="lock-icon">🔒</span>
+        <p>This user's liked tracks are private</p>
+      </div>
+    </section>
+
+    <!-- Playlists -->
     <section class="playlists-section" *ngIf="playlists.length > 0">
       <div class="section-header">
         <h2 class="section-title">Playlists</h2>
@@ -104,7 +216,16 @@
       </div>
 
       <div class="playlists-grid">
-        <div class="playlist-card" *ngFor="let playlist of playlists">
+        <div
+          class="playlist-card"
+          *ngFor="let playlist of playlists"
+          [routerLink]="['/playlists']"
+          [queryParams]="{
+            id: playlist.id,
+            userId: user.id,
+            username: user.username
+          }"
+        >
           <div class="playlist-artwork">
             <img
               [src]="getPlaylistArtwork(playlist)"

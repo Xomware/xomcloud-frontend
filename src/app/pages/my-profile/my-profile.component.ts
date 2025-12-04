@@ -24,6 +24,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   loading = true;
   error: string | null = null;
+  bioExpanded = false;
 
   stats = {
     tracks: 0,
@@ -74,12 +75,16 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   private updateStats(user: User): void {
+    console.log('User likes data:', {
+      likes_count: user.likes_count,
+      public_favorites_count: user.public_favorites_count,
+    });
     this.stats = {
-      tracks: user.track_count,
-      playlists: user.playlist_count,
-      followers: user.followers_count,
-      followings: user.followings_count,
-      likes: user.likes_count ?? user.public_favorites_count,
+      tracks: user.track_count || 0,
+      playlists: user.playlist_count || 0,
+      followers: user.followers_count || 0,
+      followings: user.followings_count || 0,
+      likes: user.likes_count ?? user.public_favorites_count ?? 0,
     };
   }
 
@@ -105,12 +110,15 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   getAvatarUrl(size: string = 'large'): string {
     if (!this.user?.avatar_url) {
-      return 'assets/img/default-avatar.svg';
+      return 'assets/img/default-avatar.png';
     }
     return this.user.avatar_url.replace('large', size);
   }
 
   formatNumber(num: number): string {
+    if (num === null || num === undefined || isNaN(num)) {
+      return '0';
+    }
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M';
     }

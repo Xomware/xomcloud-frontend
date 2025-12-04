@@ -195,18 +195,62 @@
   }
 }
 
-// Bio Section
+// Bio Section (Collapsible)
 .bio-section {
   max-width: 1200px;
   margin: 0 auto 48px;
   padding: 0 24px;
 
+  .bio-container {
+    position: relative;
+    max-height: 80px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+
+    &.expanded {
+      max-height: 1000px;
+
+      .bio-fade {
+        display: none;
+      }
+    }
+  }
+
   .bio-text {
     color: #b0b0c0;
-    font-size: 1.05rem;
+    font-size: 1rem;
     line-height: 1.7;
     margin: 0;
     max-width: 800px;
+    white-space: pre-wrap;
+  }
+
+  .bio-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(transparent, #0d0d1a);
+    pointer-events: none;
+  }
+
+  .bio-toggle {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: #ff6b35;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 107, 53, 0.15);
+      border-color: rgba(255, 107, 53, 0.3);
+    }
   }
 }
 
