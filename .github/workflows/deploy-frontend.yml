@@ -1,4 +1,4 @@
-name: Deploy Frontend
+name: Deploy Xomcloud Frontend
 
 on:
   push:
