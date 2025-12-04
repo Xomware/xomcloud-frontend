@@ -22,7 +22,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
   
   queue: QueuedTrack[] = [];
   isProcessing = false;
-  downloadProgress: DownloadProgress | null = null;
+  downloadProgress: DownloadProgress = { phase: 'idle', message: '', percentage: 0 };
 
   constructor(
     private queueService: DownloadQueueService,
@@ -44,6 +44,13 @@ export class MyCrateComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(isProcessing => {
         this.isProcessing = isProcessing;
+      });
+
+    // Subscribe to download progress
+    this.downloadService.getProgress$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(progress => {
+        this.downloadProgress = progress;
       });
   }
 
@@ -70,30 +77,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   async startDownload(): Promise<void> {
     if (this.queue.length === 0 || this.isProcessing) return;
-
-    this.downloadProgress = {
-      currentTrack: 0,
-      totalTracks: this.queue.length,
-      currentTrackName: 'Starting...',
-      phase: 'fetching',
-      percentage: 0
-    };
-
-    const success = await this.downloadService.downloadQueueAsZip(
-      (progress) => {
-        this.downloadProgress = progress;
-      }
-    );
-
-    if (success) {
-      // Optionally clear the queue after successful download
-      // this.queueService.clearQueue();
-    }
-
-    // Reset progress after a delay
-    setTimeout(() => {
-      this.downloadProgress = null;
-    }, 3000);
+    await this.downloadService.downloadQueue();
   }
 
   downloadSingleTrack(track: Track): void {
@@ -122,21 +106,10 @@ export class MyCrateComponent implements OnInit, OnDestroy {
   }
 
   getProgressPhaseText(): string {
-    if (!this.downloadProgress) return '';
-    
-    switch (this.downloadProgress.phase) {
-      case 'fetching':
-        return 'Getting stream URL...';
-      case 'downloading':
-        return 'Downloading audio...';
-      case 'zipping':
-        return 'Creating zip file...';
-      case 'complete':
-        return 'Download complete!';
-      case 'error':
-        return 'Download failed';
-      default:
-        return '';
-    }
+    return this.downloadProgress.message || '';
+  }
+
+  isDownloading(): boolean {
+    return this.downloadProgress.phase !== 'idle' && this.downloadProgress.phase !== 'complete' && this.downloadProgress.phase !== 'error';
   }
 }

@@ -25,12 +25,10 @@
   </header>
 
   <!-- Download Progress -->
-  <div class="download-progress" *ngIf="downloadProgress">
+  <div class="download-progress" *ngIf="isDownloading() || downloadProgress.phase === 'complete' || downloadProgress.phase === 'error'">
     <div class="progress-header">
       <span class="progress-phase">{{ getProgressPhaseText() }}</span>
-      <span class="progress-count">
-        {{ downloadProgress.currentTrack }} / {{ downloadProgress.totalTracks }}
-      </span>
+      <span class="progress-percent">{{ downloadProgress.percentage }}%</span>
     </div>
     
     <div class="progress-bar-container">
@@ -41,10 +39,6 @@
         [class.error]="downloadProgress.phase === 'error'">
       </div>
     </div>
-    
-    <p class="progress-track" *ngIf="downloadProgress.phase !== 'complete' && downloadProgress.phase !== 'error'">
-      {{ downloadProgress.currentTrackName }}
-    </p>
   </div>
 
   <!-- Empty State -->
