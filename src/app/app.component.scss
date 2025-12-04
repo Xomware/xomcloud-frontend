@@ -1,5 +1,6 @@
-// Global app styles
-html, body {
+// Global app style
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -8,7 +9,8 @@ html, body {
 body {
   background-color: #0a0a14;
   color: #ffffff;
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -25,7 +27,12 @@ body {
 }
 
 // Global Typography
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.3;
 }
@@ -34,7 +41,7 @@ a {
   color: #ff6b35;
   text-decoration: none;
   transition: color 0.2s ease;
-  
+
   &:hover {
     color: #f7931e;
   }
@@ -59,7 +66,7 @@ button {
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 107, 53, 0.5);
   border-radius: 4px;
-  
+
   &:hover {
     background: rgba(255, 107, 53, 0.7);
   }
