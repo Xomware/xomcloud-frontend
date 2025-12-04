@@ -1,0 +1,49 @@
+<app-loader [loading]="loading" message="Loading followers..."></app-loader>
+
+<div class="followers-container" *ngIf="!loading">
+  <header class="page-header">
+    <a routerLink="/my-profile" class="back-link">← Back to Profile</a>
+    <h1>{{ username }}'s Followers</h1>
+    <p class="follower-count" *ngIf="followers.length > 0">
+      {{ followers.length }} followers
+    </p>
+  </header>
+
+  <div class="error-state" *ngIf="error">
+    <span class="error-icon">⚠️</span>
+    <h2>{{ error }}</h2>
+    <button class="retry-btn" (click)="loadFollowers()">Try Again</button>
+  </div>
+
+  <div class="empty-state" *ngIf="!error && followers.length === 0">
+    <span class="empty-icon">👥</span>
+    <h2>No followers yet</h2>
+    <p>This user doesn't have any followers yet.</p>
+  </div>
+
+  <div class="users-grid" *ngIf="followers.length > 0">
+    <div
+      class="user-card"
+      *ngFor="let user of followers"
+      (click)="goToProfile(user)"
+    >
+      <div class="user-avatar">
+        <img
+          [src]="getAvatarUrl(user)"
+          [alt]="user.username"
+          (error)="onImageError($event, 'assets/img/default-avatar.svg')"
+        />
+      </div>
+      <div class="user-info">
+        <h3 class="user-name">{{ user.full_name || user.username }}</h3>
+        <p class="user-handle" *ngIf="user.full_name">
+          &#64;{{ user.username }}
+        </p>
+        <div class="user-stats">
+          <span>{{ formatNumber(user.followers_count) }} followers</span>
+          <span>{{ formatNumber(user.track_count) }} tracks</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

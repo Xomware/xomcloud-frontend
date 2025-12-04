@@ -1,7 +1,6 @@
-<app-loader [loading]="loading" message="Loading your profile..."></app-loader>
+<app-loader [loading]="loading" message="Loading profile..."></app-loader>
 
 <div class="profile-container" *ngIf="!loading">
-  <!-- Error State -->
   <div class="error-state" *ngIf="error">
     <div class="error-content">
       <span class="error-icon">⚠️</span>
@@ -10,10 +9,10 @@
     </div>
   </div>
 
-  <!-- Profile Content -->
   <div class="profile-content" *ngIf="user && !error">
-    <!-- Profile Header -->
     <header class="profile-header">
+      <a routerLink="/my-profile" class="back-link">← Back</a>
+
       <div class="profile-banner">
         <div class="banner-overlay"></div>
       </div>
@@ -44,59 +43,36 @@
       </div>
     </header>
 
-    <!-- Stats Grid -->
     <section class="stats-section">
       <div class="stats-grid">
-        <a
-          class="stat-card clickable"
-          routerLink="/user-tracks"
-          [queryParams]="{ id: user.id, username: user.username }"
-        >
+        <a class="stat-card clickable" (click)="goToTracks()">
           <span class="stat-value">{{ formatNumber(stats.tracks) }}</span>
           <span class="stat-label">Tracks</span>
         </a>
-        <a
-          class="stat-card clickable"
-          routerLink="/user-playlists"
-          [queryParams]="{ id: user.id, username: user.username }"
-        >
+        <a class="stat-card clickable" (click)="goToPlaylists()">
           <span class="stat-value">{{ formatNumber(stats.playlists) }}</span>
           <span class="stat-label">Playlists</span>
         </a>
-        <a
-          class="stat-card clickable"
-          routerLink="/followers"
-          [queryParams]="{ id: user.id, username: user.username }"
-        >
+        <a class="stat-card clickable" (click)="goToFollowers()">
           <span class="stat-value">{{ formatNumber(stats.followers) }}</span>
           <span class="stat-label">Followers</span>
         </a>
-        <a
-          class="stat-card clickable"
-          routerLink="/following"
-          [queryParams]="{ id: user.id, username: user.username }"
-        >
+        <a class="stat-card clickable" (click)="goToFollowing()">
           <span class="stat-value">{{ formatNumber(stats.followings) }}</span>
           <span class="stat-label">Following</span>
         </a>
-        <div class="stat-card">
-          <span class="stat-value">{{ formatNumber(stats.likes) }}</span>
-          <span class="stat-label">Likes</span>
-        </div>
       </div>
     </section>
 
-    <!-- Bio Section -->
     <section class="bio-section" *ngIf="user.description">
       <h2 class="section-title">About</h2>
       <p class="bio-text">{{ user.description }}</p>
     </section>
 
-    <!-- Recent Liked Tracks -->
     <section class="tracks-section" *ngIf="recentTracks.length > 0">
       <div class="section-header">
-        <h2 class="section-title">Recently Liked</h2>
-        <a routerLink="/liked-tracks" class="view-all">View All →</a>
+        <h2 class="section-title">Recent Tracks</h2>
+        <a (click)="goToTracks()" class="view-all">View All →</a>
       </div>
 
       <div class="tracks-grid">
@@ -121,11 +97,10 @@
       </div>
     </section>
 
-    <!-- Playlists -->
     <section class="playlists-section" *ngIf="playlists.length > 0">
       <div class="section-header">
-        <h2 class="section-title">Your Playlists</h2>
-        <a routerLink="/playlists" class="view-all">View All →</a>
+        <h2 class="section-title">Playlists</h2>
+        <a (click)="goToPlaylists()" class="view-all">View All →</a>
       </div>
 
       <div class="playlists-grid">

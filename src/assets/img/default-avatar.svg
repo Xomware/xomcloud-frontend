@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Simple default avatar SVG used as a fallback when user avatars fail to load -->
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="Default avatar">
+  <rect width="100%" height="100%" fill="#f3f4f6" />
+  <g transform="translate(40,30)">
+    <circle cx="60" cy="40" r="36" fill="#e5e7eb" />
+    <circle cx="60" cy="40" r="30" fill="#cbd5e1" />
+    <path d="M8 138c8-20 28-34 52-34s44 14 52 34" fill="#d1d5db" />
+    <path d="M8 138c8-20 28-34 52-34s44 14 52 34" fill="#cbd5e1" opacity="0.8"/>
+  </g>
+</svg>

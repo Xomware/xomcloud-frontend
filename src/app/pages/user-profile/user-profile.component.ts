@@ -1,5 +1,6 @@
-// my-profile.component.ts
+// user-profile.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { User, Track, Playlist } from '../../models';
@@ -11,13 +12,14 @@ import {
 } from '../../services';
 
 @Component({
-  selector: 'app-my-profile',
-  templateUrl: './my-profile.component.html',
-  styleUrls: ['./my-profile.component.scss'],
+  selector: 'app-user-profile',
+  templateUrl: './user-profile.component.html',
+  styleUrls: ['./user-profile.component.scss'],
 })
-export class MyProfileComponent implements OnInit, OnDestroy {
+export class UserProfileComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
+  userId: number | null = null;
   user: User | null = null;
   recentTracks: Track[] = [];
   playlists: Playlist[] = [];
@@ -30,10 +32,11 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     playlists: 0,
     followers: 0,
     followings: 0,
-    likes: 0,
   };
 
   constructor(
+    private route: ActivatedRoute,
+    private router: Router,
     private userService: UserService,
     private trackService: TrackService,
     private playlistService: PlaylistService,
@@ -41,7 +44,12 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadProfile();
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        this.userId = params['id'] ? +params['id'] : null;
+        this.loadProfile();
+      });
   }
 
   ngOnDestroy(): void {
@@ -50,11 +58,17 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   loadProfile(): void {
+    if (!this.userId) {
+      this.error = 'No user specified';
+      this.loading = false;
+      return;
+    }
+
     this.loading = true;
     this.error = null;
 
     this.userService
-      .fetchCurrentUser()
+      .getUserById(this.userId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => (this.loading = false))
@@ -67,7 +81,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Failed to load profile:', err);
-          this.error = 'Failed to load your profile. Please try again.';
+          this.error = 'Failed to load profile. Please try again.';
           this.toastService.showNegativeToast('Failed to load profile');
         },
       });
@@ -75,27 +89,28 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   private updateStats(user: User): void {
     this.stats = {
-      tracks: user.track_count,
-      playlists: user.playlist_count,
-      followers: user.followers_count,
-      followings: user.followings_count,
-      likes: user.likes_count ?? user.public_favorites_count,
+      tracks: user.track_count || 0,
+      playlists: user.playlist_count || 0,
+      followers: user.followers_count || 0,
+      followings: user.followings_count || 0,
     };
   }
 
   private loadAdditionalData(): void {
-    // Load recent tracks
+    if (!this.userId) return;
+
+    // Load user's tracks
     this.trackService
-      .getLikedTracks(6)
+      .getUserTracks(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tracks) => (this.recentTracks = tracks),
-        error: (err) => console.error('Failed to load recent tracks:', err),
+        error: (err) => console.error('Failed to load tracks:', err),
       });
 
-    // Load playlists
-    this.playlistService
-      .getUserPlaylists(false, 6)
+    // Load user's playlists
+    this.userService
+      .getUserPlaylists(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (playlists) => (this.playlists = playlists),
@@ -103,21 +118,41 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       });
   }
 
-  getAvatarUrl(size: string = 'large'): string {
-    if (!this.user?.avatar_url) {
-      return 'assets/img/default-avatar.svg';
+  goToTracks(): void {
+    if (this.user) {
+      this.router.navigate(['/user-tracks'], {
+        queryParams: { id: this.user.id, username: this.user.username },
+      });
     }
-    return this.user.avatar_url.replace('large', size);
   }
 
-  formatNumber(num: number): string {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
+  goToPlaylists(): void {
+    if (this.user) {
+      this.router.navigate(['/user-playlists'], {
+        queryParams: { id: this.user.id, username: this.user.username },
+      });
     }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
+  }
+
+  goToFollowers(): void {
+    if (this.user) {
+      this.router.navigate(['/followers'], {
+        queryParams: { id: this.user.id, username: this.user.username },
+      });
     }
-    return num.toString();
+  }
+
+  goToFollowing(): void {
+    if (this.user) {
+      this.router.navigate(['/following'], {
+        queryParams: { id: this.user.id, username: this.user.username },
+      });
+    }
+  }
+
+  getAvatarUrl(size: string = 'large'): string {
+    if (!this.user?.avatar_url) return 'assets/img/default-avatar.svg';
+    return this.user.avatar_url.replace('large', size);
   }
 
   getTrackArtwork(track: Track): string {
@@ -126,6 +161,12 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   getPlaylistArtwork(playlist: Playlist): string {
     return this.playlistService.getArtworkUrl(playlist, 't300x300');
+  }
+
+  formatNumber(num: number): string {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
   }
 
   getJoinDate(): string {
@@ -142,8 +183,6 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   onImageError(event: Event, fallbackSrc: string): void {
     const target = event.target as HTMLImageElement;
-    if (target) {
-      target.src = fallbackSrc;
-    }
+    if (target) target.src = fallbackSrc;
   }
 }

@@ -18,8 +18,13 @@ import { CallbackComponent } from './components/callback/callback.component';
 // Pages
 import { HomeComponent } from './pages/home/home.component';
 import { MyProfileComponent } from './pages/my-profile/my-profile.component';
+import { UserProfileComponent } from './pages/user-profile/user-profile.component';
 import { LikedTracksComponent } from './pages/liked-tracks/liked-tracks.component';
+import { UserTracksComponent } from './pages/user-tracks/user-tracks.component';
 import { PlaylistsComponent } from './pages/playlists/playlists.component';
+import { UserPlaylistsComponent } from './pages/user-playlists/user-playlists.component';
+import { FollowersComponent } from './pages/followers/followers.component';
+import { FollowingComponent } from './pages/following/following.component';
 import { SearchComponent } from './pages/search/search.component';
 import { MyCrateComponent } from './pages/my-crate/my-crate.component';
 
@@ -47,8 +52,13 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     // Pages
     HomeComponent,
     MyProfileComponent,
+    UserProfileComponent,
     LikedTracksComponent,
+    UserTracksComponent,
     PlaylistsComponent,
+    UserPlaylistsComponent,
+    FollowersComponent,
+    FollowingComponent,
     SearchComponent,
     MyCrateComponent,
   ],
@@ -71,9 +81,9 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
-    }
+      multi: true,
+    },
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
