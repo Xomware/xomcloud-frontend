@@ -318,10 +318,10 @@ export class AuthService {
 
   // Get auth header for API requests
   getAuthHeaders(): HttpHeaders {
-    const token = this.accessToken$.value;
+    const token = environment.apiAuthToken;
     return new HttpHeaders({
-      Authorization: `OAuth ${token}`,
-      Accept: 'application/json; charset=utf-8',
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
     });
   }
 }
