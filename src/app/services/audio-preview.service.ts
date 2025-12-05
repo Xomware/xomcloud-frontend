@@ -153,25 +153,35 @@ export class AudioPreviewService {
     const numericId = String(track.id).replace('soundcloud:tracks:', '');
 
     try {
-      // Use the /streams endpoint which returns direct URLs
-      const streamsUrl = `${environment.apiBaseUrl}/tracks/${numericId}/streams`;
+      // Per SoundCloud docs: GET /tracks/:id/stream returns redirect to actual stream
+      // We need to call this endpoint and it will return available transcodings
+      const streamUrl = `${environment.apiBaseUrl}/tracks/${numericId}/stream`;
       const response = await this.http
-        .get<any>(streamsUrl, {
+        .get<any>(streamUrl, {
           headers: this.authService.getAuthHeaders(),
         })
         .toPromise();
 
-      // Prefer http_mp3_128_url, fallback to hls
-      const url = response?.http_mp3_128_url || response?.hls_mp3_128_url;
-      if (url) {
+      // Response contains url property with the actual stream
+      if (response?.url) {
         console.log('Got stream URL for:', track.title);
-        return url;
+        return response.url;
       }
-    } catch (e) {
-      console.warn('Failed to get streams URL:', e);
+
+      // Or it might return http_mp3_128_url directly
+      if (response?.http_mp3_128_url) {
+        return response.http_mp3_128_url;
+      }
+    } catch (e: any) {
+      // Check if track access is blocked
+      if (e.status === 403 || e.status === 401) {
+        console.warn('Track streaming not allowed:', track.title);
+      } else {
+        console.warn('Failed to get stream URL:', e);
+      }
     }
 
-    // Fallback: try media transcodings if available
+    // Fallback: try media transcodings if available on track object
     if (track.media?.transcodings?.length) {
       const progressive = track.media.transcodings.find(
         (t) => t.format.protocol === 'progressive'
