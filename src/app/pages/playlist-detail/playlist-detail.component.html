@@ -58,11 +58,33 @@
         class="track-item"
         *ngFor="let track of tracks; let i = index"
         [class.in-queue]="isInQueue(track.id)"
+        [class.playing]="isTrackPlaying(track.id)"
       >
         <span class="track-number">{{ i + 1 }}</span>
 
-        <div class="track-artwork">
+        <div
+          class="track-artwork"
+          (click)="togglePlay(track); $event.stopPropagation()"
+        >
           <img [src]="getArtworkUrl(track)" [alt]="track.title" />
+          <div class="play-overlay" [class.playing]="isTrackPlaying(track.id)">
+            <svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              *ngIf="!isTrackPlaying(track.id)"
+            >
+              <path fill="currentColor" d="M8 5v14l11-7z" />
+            </svg>
+            <svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              *ngIf="isTrackPlaying(track.id)"
+            >
+              <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+          </div>
         </div>
 
         <div class="track-info">

@@ -95,6 +95,7 @@
       [class.selected]="isSelected(item.track.id)"
       [class.processing]="isProcessing"
       [class.long-track]="isLongTrack(item.track)"
+      [class.playing]="isTrackPlaying(item.track.id)"
       (click)="toggleSelection(item.track.id)"
     >
       <div class="selection-checkbox">
@@ -108,12 +109,36 @@
 
       <span class="item-number">{{ i + 1 }}</span>
 
-      <div class="item-artwork">
+      <div
+        class="item-artwork"
+        (click)="togglePlay(item.track); $event.stopPropagation()"
+      >
         <img
           [src]="getArtworkUrl(item.track)"
           [alt]="item.track.title"
           (error)="onImageError($event, 'assets/img/default-artwork.png')"
         />
+        <div
+          class="play-overlay"
+          [class.playing]="isTrackPlaying(item.track.id)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            *ngIf="!isTrackPlaying(item.track.id)"
+          >
+            <path fill="currentColor" d="M8 5v14l11-7z" />
+          </svg>
+          <svg
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            *ngIf="isTrackPlaying(item.track.id)"
+          >
+            <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </div>
       </div>
 
       <div class="item-info">

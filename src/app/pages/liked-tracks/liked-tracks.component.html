@@ -37,14 +37,23 @@
     <div 
       class="track-card"
       *ngFor="let track of tracks"
-      [class.in-queue]="isInQueue(track.id)">
+      [class.in-queue]="isInQueue(track.id)"
+      [class.playing]="isTrackPlaying(track.id)">
       
       <!-- Artwork -->
-      <div class="track-artwork">
+      <div class="track-artwork" (click)="togglePlay(track)">
         <img 
           [src]="getArtworkUrl(track)" 
           [alt]="track.title"
           (error)="onImageError($event, 'assets/img/default-artwork.png')">
+        <div class="play-overlay" [class.playing]="isTrackPlaying(track.id)">
+          <svg viewBox="0 0 24 24" width="32" height="32" *ngIf="!isTrackPlaying(track.id)">
+            <path fill="currentColor" d="M8 5v14l11-7z"/>
+          </svg>
+          <svg viewBox="0 0 24 24" width="32" height="32" *ngIf="isTrackPlaying(track.id)">
+            <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </div>
         <div class="queue-badge" *ngIf="isInQueue(track.id)">
           <svg viewBox="0 0 24 24" width="16" height="16">
             <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>

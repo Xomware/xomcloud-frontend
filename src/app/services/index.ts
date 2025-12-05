@@ -6,3 +6,4 @@ export * from './track.service';
 export * from './playlist.service';
 export * from './download-queue.service';
 export * from './download.service';
+export * from './audio-preview.service';

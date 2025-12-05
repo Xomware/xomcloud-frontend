@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PlaylistService } from '../../services/playlist.service';
 import { DownloadQueueService } from '../../services/download-queue.service';
 import { ToastService } from '../../services/toast.service';
+import { AudioPreviewService } from '../../services/audio-preview.service';
 import { Track } from '../../models';
 
 @Component({
@@ -21,7 +22,8 @@ export class PlaylistDetailComponent implements OnInit {
     private router: Router,
     private playlistService: PlaylistService,
     private queueService: DownloadQueueService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private audioPreview: AudioPreviewService
   ) {}
 
   ngOnInit(): void {
@@ -105,5 +107,15 @@ export class PlaylistDetailComponent implements OnInit {
       return `${hours}h ${mins}m`;
     }
     return `${totalMinutes} min`;
+  }
+
+  // ==================== Audio Preview ====================
+
+  togglePlay(track: Track): void {
+    this.audioPreview.toggle(track);
+  }
+
+  isTrackPlaying(trackId: number): boolean {
+    return this.audioPreview.isPlaying(trackId);
   }
 }

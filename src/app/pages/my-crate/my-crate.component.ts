@@ -3,33 +3,34 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Track } from '../../models';
-import {
-  DownloadQueueService,
+import { 
+  DownloadQueueService, 
   QueuedTrack,
   DownloadService,
   DownloadProgress,
   TrackService,
   ToastService,
+  AudioPreviewService
 } from '../../services';
 
 @Component({
   selector: 'app-my-crate',
   templateUrl: './my-crate.component.html',
-  styleUrls: ['./my-crate.component.scss'],
+  styleUrls: ['./my-crate.component.scss']
 })
 export class MyCrateComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-
+  
   queue: QueuedTrack[] = [];
   selectedTrackIds: Set<number> = new Set();
   isProcessing = false;
-  downloadProgress: DownloadProgress = {
-    phase: 'idle',
-    message: '',
+  downloadProgress: DownloadProgress = { 
+    phase: 'idle', 
+    message: '', 
     currentTrack: '',
-    current: 0,
+    current: 0, 
     total: 0,
-    percentage: 0,
+    percentage: 0 
   };
 
   readonly MAX_DOWNLOAD = 5;
@@ -38,35 +39,33 @@ export class MyCrateComponent implements OnInit, OnDestroy {
     private queueService: DownloadQueueService,
     private downloadService: DownloadService,
     private trackService: TrackService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private audioPreview: AudioPreviewService
   ) {}
 
   ngOnInit(): void {
-    this.queueService
-      .getQueue$()
+    this.queueService.getQueue$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((queue) => {
+      .subscribe(queue => {
         this.queue = queue;
         // Clean up selections for removed tracks
-        const queueIds = new Set(queue.map((q) => q.track.id));
-        this.selectedTrackIds.forEach((id) => {
+        const queueIds = new Set(queue.map(q => q.track.id));
+        this.selectedTrackIds.forEach(id => {
           if (!queueIds.has(id)) {
             this.selectedTrackIds.delete(id);
           }
         });
       });
 
-    this.queueService
-      .getIsProcessing$()
+    this.queueService.getIsProcessing$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((isProcessing) => {
+      .subscribe(isProcessing => {
         this.isProcessing = isProcessing;
       });
 
-    this.downloadService
-      .getProgress$()
+    this.downloadService.getProgress$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((progress) => {
+      .subscribe(progress => {
         this.downloadProgress = progress;
       });
   }
@@ -87,9 +86,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
       this.selectedTrackIds.delete(trackId);
     } else {
       if (this.selectedTrackIds.size >= this.MAX_DOWNLOAD) {
-        this.toastService.showInfoToast(
-          `Maximum ${this.MAX_DOWNLOAD} tracks per download`
-        );
+        this.toastService.showInfoToast(`Maximum ${this.MAX_DOWNLOAD} tracks per download`);
         return;
       }
       this.selectedTrackIds.add(trackId);
@@ -102,16 +99,13 @@ export class MyCrateComponent implements OnInit, OnDestroy {
   }
 
   selectAll(): void {
-    if (
-      this.selectedTrackIds.size ===
-      Math.min(this.queue.length, this.MAX_DOWNLOAD)
-    ) {
+    if (this.selectedTrackIds.size === Math.min(this.queue.length, this.MAX_DOWNLOAD)) {
       // Deselect all
       this.selectedTrackIds.clear();
     } else {
       // Select up to MAX_DOWNLOAD
       this.selectedTrackIds.clear();
-      this.queue.slice(0, this.MAX_DOWNLOAD).forEach((item) => {
+      this.queue.slice(0, this.MAX_DOWNLOAD).forEach(item => {
         this.selectedTrackIds.add(item.track.id);
       });
     }
@@ -130,8 +124,8 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   removeSelected(): void {
     if (this.selectedTrackIds.size === 0) return;
-
-    this.selectedTrackIds.forEach((id) => {
+    
+    this.selectedTrackIds.forEach(id => {
       this.queueService.removeFromQueue(id);
     });
     this.selectedTrackIds.clear();
@@ -139,7 +133,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   clearQueue(): void {
     if (this.queue.length === 0) return;
-
+    
     if (confirm('Are you sure you want to clear your entire crate?')) {
       this.queueService.clearQueue();
       this.selectedTrackIds.clear();
@@ -153,20 +147,20 @@ export class MyCrateComponent implements OnInit, OnDestroy {
       this.toastService.showInfoToast('Select tracks to download (max 5)');
       return;
     }
-
+    
     if (this.isProcessing) return;
 
     // Get selected tracks
     const selectedTracks = this.queue
-      .filter((item) => this.selectedTrackIds.has(item.track.id))
-      .map((item) => item.track);
+      .filter(item => this.selectedTrackIds.has(item.track.id))
+      .map(item => item.track);
 
     // Download selected
     const success = await this.downloadService.downloadSelected(selectedTracks);
-
+    
     if (success) {
       // Remove downloaded tracks from queue
-      selectedTracks.forEach((track) => {
+      selectedTracks.forEach(track => {
         this.queueService.removeFromQueue(track.id);
       });
       this.selectedTrackIds.clear();
@@ -193,9 +187,9 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   getSelectedDuration(): string {
     const selectedMs = this.queue
-      .filter((item) => this.selectedTrackIds.has(item.track.id))
+      .filter(item => this.selectedTrackIds.has(item.track.id))
       .reduce((sum, item) => sum + item.track.duration, 0);
-
+    
     const minutes = Math.floor(selectedMs / 60000);
     if (minutes >= 60) {
       return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
@@ -211,15 +205,23 @@ export class MyCrateComponent implements OnInit, OnDestroy {
   }
 
   isDownloading(): boolean {
-    return (
-      this.downloadProgress.phase !== 'idle' &&
-      this.downloadProgress.phase !== 'complete' &&
-      this.downloadProgress.phase !== 'error'
-    );
+    return this.downloadProgress.phase !== 'idle' && 
+           this.downloadProgress.phase !== 'complete' && 
+           this.downloadProgress.phase !== 'error';
   }
 
   // Check if track is long (>8 min)
   isLongTrack(track: Track): boolean {
     return track.duration > 8 * 60 * 1000;
+  }
+
+  // ==================== Audio Preview ====================
+
+  togglePlay(track: Track): void {
+    this.audioPreview.toggle(track);
+  }
+
+  isTrackPlaying(trackId: number): boolean {
+    return this.audioPreview.isPlaying(trackId);
   }
 }
