@@ -118,14 +118,10 @@ export class DownloadService {
       0
     );
 
-    // Estimate processing time: base ~1 second per 30 seconds of audio,
-    // but empirical results show actual processing is slower. Apply a
-    // multiplier to provide a more realistic ETA for the UI (approx 3.8x).
-    // Min 10s, max 10 minutes.
-    const SIMULATION_MULTIPLIER = 3.8; // adjust if needed
+    // Estimate processing time: ~1 second per 120 seconds of audio (4x faster), minimum 3s, max 75s
     const estimatedProcessingMs = Math.max(
-      10000,
-      Math.min((totalDurationMs / 30) * SIMULATION_MULTIPLIER, 600000)
+      3000,
+      Math.min(totalDurationMs / 120, 75000)
     );
 
     const updateInterval = 200; // Update every 200ms for smooth animation
