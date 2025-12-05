@@ -9,13 +9,7 @@ import { DownloadQueueService } from './download-queue.service';
 import { environment } from 'src/environments/environment';
 
 export interface DownloadProgress {
-  phase:
-    | 'idle'
-    | 'preparing'
-    | 'uploading'
-    | 'processing'
-    | 'complete'
-    | 'error';
+  phase: 'idle' | 'preparing' | 'uploading' | 'processing' | 'complete' | 'error';
   message: string;
   currentTrack: string;
   current: number;
@@ -45,7 +39,7 @@ export interface DownloadResponse {
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class DownloadService {
   private progress$ = new BehaviorSubject<DownloadProgress>({
@@ -54,7 +48,7 @@ export class DownloadService {
     currentTrack: '',
     current: 0,
     total: 0,
-    percentage: 0,
+    percentage: 0
   });
 
   // Simulated progress for long-running downloads
@@ -79,14 +73,7 @@ export class DownloadService {
     total: number = 0
   ): void {
     const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
-    this.progress$.next({
-      phase,
-      message,
-      currentTrack,
-      current,
-      total,
-      percentage,
-    });
+    this.progress$.next({ phase, message, currentTrack, current, total, percentage });
   }
 
   private resetProgress(): void {
@@ -97,7 +84,7 @@ export class DownloadService {
       currentTrack: '',
       current: 0,
       total: 0,
-      percentage: 0,
+      percentage: 0
     });
   }
 
@@ -111,20 +98,16 @@ export class DownloadService {
 
   private startProgressSimulation(total: number): void {
     this.stopProgressSimulation();
-
+    
     let simulated = 0;
     const estimatedTimePerTrack = 8000; // ~8 seconds per track
     const updateInterval = 500; // Update every 500ms
-    const incrementPerUpdate =
-      100 / ((total * estimatedTimePerTrack) / updateInterval);
+    const incrementPerUpdate = 100 / (total * estimatedTimePerTrack / updateInterval);
 
     this.progressInterval = setInterval(() => {
       simulated = Math.min(simulated + incrementPerUpdate, 95); // Cap at 95%
-
-      const currentTrack = Math.min(
-        Math.ceil((simulated / 100) * total),
-        total
-      );
+      
+      const currentTrack = Math.min(Math.ceil((simulated / 100) * total), total);
       this.setProgress(
         'processing',
         `Processing track ${currentTrack} of ${total}...`,
@@ -146,16 +129,14 @@ export class DownloadService {
 
   async downloadQueue(): Promise<boolean> {
     const queue = this.queueService.getQueue();
-
+    
     if (queue.length === 0) {
       this.toastService.showNegativeToast('Your crate is empty');
       return false;
     }
 
     if (queue.length > 10) {
-      this.toastService.showNegativeToast(
-        'Maximum 10 tracks per download. Please remove some tracks.'
-      );
+      this.toastService.showNegativeToast('Maximum 10 tracks per download. Please remove some tracks.');
       return false;
     }
 
@@ -166,46 +147,31 @@ export class DownloadService {
     }
 
     this.queueService.setProcessing(true);
-
+    
     try {
-      this.setProgress(
-        'preparing',
-        'Preparing download request...',
-        '',
-        0,
-        queue.length
-      );
+      this.setProgress('preparing', 'Preparing download request...', '', 0, queue.length);
 
       // Build request payload
-      const tracks = queue.map((item) => ({
+      const tracks = queue.map(item => ({
         id: item.track.id,
         url: item.track.permalink_url,
         title: item.track.title,
-        artist: item.track.user?.username || 'Unknown Artist',
+        artist: item.track.user?.username || 'Unknown Artist'
       }));
 
-      this.setProgress(
-        'uploading',
-        'Sending to server...',
-        '',
-        0,
-        queue.length
-      );
+      this.setProgress('uploading', 'Sending to server...', '', 0, queue.length);
 
       // Start progress simulation
       this.startProgressSimulation(queue.length);
 
       // Call Lambda (Function URL has no timeout, can take several minutes)
-      const response = await this.http
-        .post<DownloadResponse>(
-          downloadUrl,
-          { tracks },
-          {
-            headers: this.authService.getAuthHeaders(),
-            // No timeout - Lambda Function URL can run up to 15 min
-          }
-        )
-        .toPromise();
+      const response = await this.http.post<DownloadResponse>(
+        downloadUrl,
+        { tracks },
+        { 
+          headers: this.authService.getXomcloudHeaders(),
+        }
+      ).toPromise();
 
       this.stopProgressSimulation();
 
@@ -214,47 +180,37 @@ export class DownloadService {
       }
 
       const { data } = response;
-
-      this.setProgress(
-        'complete',
-        'Download ready!',
-        '',
-        data.successful,
-        data.total
-      );
+      
+      this.setProgress('complete', 'Download ready!', '', data.successful, data.total);
 
       // Open the presigned S3 URL to download the zip
       window.open(data.download_url, '_blank');
 
       // Show result message
       if (data.failed_count > 0) {
-        const failedNames = data.failed
-          ?.slice(0, 3)
-          .map((f) => f.title)
-          .join(', ');
-        const moreText =
-          data.failed_count > 3 ? ` and ${data.failed_count - 3} more` : '';
+        const failedNames = data.failed?.slice(0, 3).map(f => f.title).join(', ');
+        const moreText = data.failed_count > 3 ? ` and ${data.failed_count - 3} more` : '';
         this.toastService.showInfoToast(
           `Downloaded ${data.successful}/${data.total} tracks. Failed: ${failedNames}${moreText}`
         );
       } else {
-        this.toastService.showPositiveToast(
-          `Successfully downloaded ${data.successful} tracks!`
-        );
+        this.toastService.showPositiveToast(`Successfully downloaded ${data.successful} tracks!`);
       }
 
       setTimeout(() => this.resetProgress(), 4000);
       return true;
+
     } catch (error: any) {
       this.stopProgressSimulation();
       console.error('Download failed:', error);
-
+      
       const errorMessage = this.getErrorMessage(error);
       this.setProgress('error', errorMessage, '', 0, 0);
       this.toastService.showNegativeToast(errorMessage);
-
+      
       setTimeout(() => this.resetProgress(), 4000);
       return false;
+      
     } finally {
       this.queueService.setProcessing(false);
     }
@@ -264,7 +220,7 @@ export class DownloadService {
 
   async downloadSingleTrack(track: Track): Promise<void> {
     const downloadUrl = environment.downloadApiUrl;
-
+    
     if (!downloadUrl) {
       // Fallback: try to open SoundCloud page
       if (track.permalink_url) {
@@ -275,27 +231,21 @@ export class DownloadService {
       return;
     }
 
-    this.toastService.showInfoToast(
-      `Preparing "${this.truncate(track.title, 30)}"...`
-    );
+    this.toastService.showInfoToast(`Preparing "${this.truncate(track.title, 30)}"...`);
 
     try {
-      const response = await this.http
-        .post<DownloadResponse>(
-          downloadUrl,
-          {
-            tracks: [
-              {
-                id: track.id,
-                url: track.permalink_url,
-                title: track.title,
-                artist: track.user?.username || 'Unknown Artist',
-              },
-            ],
-          },
-          { headers: this.authService.getAuthHeaders() }
-        )
-        .toPromise();
+      const response = await this.http.post<DownloadResponse>(
+        downloadUrl,
+        { 
+          tracks: [{
+            id: track.id,
+            url: track.permalink_url,
+            title: track.title,
+            artist: track.user?.username || 'Unknown Artist'
+          }]
+        },
+        { headers: this.authService.getXomcloudHeaders() }
+      ).toPromise();
 
       if (response?.data?.download_url) {
         window.open(response.data.download_url, '_blank');
@@ -327,11 +277,11 @@ export class DownloadService {
       }
       return `Server error (${error.status}). Please try again.`;
     }
-
+    
     if (error?.message) {
       return error.message;
     }
-
+    
     return 'Download failed. Please try again.';
   }
 
