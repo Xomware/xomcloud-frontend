@@ -57,7 +57,7 @@
         </a>
         <a
           class="stat-card clickable"
-          routerLink="/user-playlists"
+          routerLink="/playlists"
           [queryParams]="{ id: user.id, username: user.username }"
         >
           <span class="stat-value">{{ formatNumber(stats.playlists) }}</span>
@@ -79,10 +79,12 @@
           <span class="stat-value">{{ formatNumber(stats.followings) }}</span>
           <span class="stat-label">Following</span>
         </a>
-        <div class="stat-card">
-          <span class="stat-value">{{ formatNumber(stats.likes) }}</span>
+        <a class="stat-card clickable" routerLink="/liked-tracks">
+          <span class="stat-value">{{
+            stats.likes !== 0 ? formatNumber(stats.likes) : "❤️"
+          }}</span>
           <span class="stat-label">Likes</span>
-        </div>
+        </a>
       </div>
     </section>
 

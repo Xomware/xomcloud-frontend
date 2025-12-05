@@ -2,11 +2,9 @@
 
 <div class="user-playlists-container" *ngIf="!loading">
   <header class="page-header">
-    <a routerLink="/my-profile" class="back-link">← Back to Profile</a>
+    <a class="back-link" (click)="goBackToProfile()">← Back to Profile</a>
     <h1>{{ username }}'s Playlists</h1>
-    <p class="playlist-count" *ngIf="playlists.length > 0">
-      {{ playlists.length }} playlists
-    </p>
+    <p class="playlist-count" *ngIf="playlists.length > 0">{{ playlists.length }} playlists</p>
   </header>
 
   <div class="error-state" *ngIf="error">
@@ -22,17 +20,19 @@
   </div>
 
   <div class="playlists-grid" *ngIf="playlists.length > 0">
-    <div class="playlist-card" *ngFor="let playlist of playlists">
+    <div class="playlist-card" *ngFor="let playlist of playlists" (click)="goToPlaylist(playlist)">
       <div class="playlist-artwork">
-        <img
-          [src]="getArtworkUrl(playlist)"
-          [alt]="playlist.title"
-          (error)="onImageError($event, 'assets/img/default-artwork.png')"
-        />
-        <div class="play-overlay">
-          <svg viewBox="0 0 24 24" width="40" height="40">
-            <path fill="currentColor" d="M8 5v14l11-7z" />
-          </svg>
+        <img [src]="getArtworkUrl(playlist)" [alt]="playlist.title"
+             (error)="onImageError($event, 'assets/img/default-artwork.png')">
+        <div class="playlist-overlay">
+          <button 
+            class="add-all-btn"
+            (click)="addPlaylistToQueue(playlist); $event.stopPropagation()"
+            title="Add all tracks to crate">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+          </button>
         </div>
       </div>
       <div class="playlist-info">

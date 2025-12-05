@@ -1,0 +1,118 @@
+<div class="playlist-detail-container">
+  <!-- Loading State -->
+  <app-loader *ngIf="loading"></app-loader>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <span class="error-icon">⚠️</span>
+    <h2>{{ error }}</h2>
+    <button class="back-btn" (click)="goBack()">Go Back</button>
+  </div>
+
+  <!-- Playlist Content -->
+  <div class="playlist-content" *ngIf="playlist && !loading">
+    <!-- Header -->
+    <header class="playlist-header">
+      <a class="back-link" (click)="goBack()">← Back to Playlists</a>
+
+      <div class="header-content">
+        <div class="playlist-artwork">
+          <img [src]="getPlaylistArtwork()" [alt]="playlist.title" />
+        </div>
+
+        <div class="playlist-info">
+          <span class="playlist-type">PLAYLIST</span>
+          <h1>{{ playlist.title }}</h1>
+          <p class="playlist-meta">
+            <span
+              class="creator"
+              (click)="goToArtist(playlist.user?.id, playlist.user?.username)"
+            >
+              {{ playlist.user?.username }}
+            </span>
+            <span class="separator">•</span>
+            <span>{{ tracks.length }} tracks</span>
+            <span class="separator">•</span>
+            <span>{{ getTotalDuration() }}</span>
+          </p>
+          <p class="playlist-description" *ngIf="playlist.description">
+            {{ playlist.description }}
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Actions -->
+    <div class="playlist-actions">
+      <button class="add-all-btn" (click)="addAllToQueue()">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+        Add All to Crate
+      </button>
+    </div>
+
+    <!-- Track List -->
+    <div class="track-list">
+      <div
+        class="track-item"
+        *ngFor="let track of tracks; let i = index"
+        [class.in-queue]="isInQueue(track.id)"
+      >
+        <span class="track-number">{{ i + 1 }}</span>
+
+        <div class="track-artwork">
+          <img [src]="getArtworkUrl(track)" [alt]="track.title" />
+        </div>
+
+        <div class="track-info">
+          <h3 class="track-title">{{ track.title }}</h3>
+          <p
+            class="track-artist"
+            (click)="
+              goToArtist(track.user.id, track.user.username);
+              $event.stopPropagation()
+            "
+          >
+            {{ track.user.username }}
+          </p>
+        </div>
+
+        <span class="track-duration">{{ formatDuration(track.duration) }}</span>
+
+        <button
+          class="add-btn"
+          [class.in-queue]="isInQueue(track.id)"
+          (click)="addToQueue(track)"
+          [disabled]="isInQueue(track.id)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            *ngIf="!isInQueue(track.id)"
+          >
+            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          </svg>
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            *ngIf="isInQueue(track.id)"
+          >
+            <path
+              fill="currentColor"
+              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="tracks.length === 0">
+      <span class="empty-icon">🎵</span>
+      <h2>No tracks in this playlist</h2>
+    </div>
+  </div>
+</div>

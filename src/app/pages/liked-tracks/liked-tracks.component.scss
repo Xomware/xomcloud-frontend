@@ -8,21 +8,36 @@
 
 // Page Header
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 16px;
+}
+
+.back-link {
+  display: inline-block;
+  color: #8a8a9a;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: #ff6b35;
+  }
 }
 
 .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  
   h1 {
     font-size: 2rem;
     color: #fff;
     margin: 0 0 4px 0;
   }
-
+  
   .track-count {
     color: #8a8a9a;
     font-size: 0.95rem;
@@ -47,26 +62,26 @@
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.15);
-
+  
   &:hover {
     background: rgba(255, 255, 255, 0.15);
   }
-
+  
   &.active {
     background: rgba(255, 107, 53, 0.2);
     border-color: #ff6b35;
     color: #ff6b35;
   }
-
+  
   &.primary {
     background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
     border: none;
     color: #fff;
-
+    
     &:hover {
       box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
     }
-
+    
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -83,19 +98,19 @@
   justify-content: center;
   min-height: 400px;
   text-align: center;
-
+  
   .error-icon,
   .empty-icon {
     font-size: 4rem;
     margin-bottom: 24px;
   }
-
+  
   h2 {
     color: #fff;
     font-size: 1.3rem;
     margin: 0 0 12px 0;
   }
-
+  
   p {
     color: #8a8a9a;
     margin: 0 0 24px 0;
@@ -111,7 +126,7 @@
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-
+  
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
@@ -134,20 +149,20 @@
   border-radius: 12px;
   transition: all 0.2s ease;
   cursor: pointer;
-
+  
   &:hover {
     background: rgba(255, 255, 255, 0.08);
-
+    
     .add-btn {
       opacity: 1;
     }
   }
-
+  
   &.selected {
     background: rgba(255, 107, 53, 0.15);
     border: 1px solid rgba(255, 107, 53, 0.3);
   }
-
+  
   &.in-queue {
     border-left: 3px solid #ff6b35;
   }
@@ -156,7 +171,7 @@
 // Selection Checkbox
 .selection-checkbox {
   flex-shrink: 0;
-
+  
   input[type="checkbox"] {
     width: 20px;
     height: 20px;
@@ -173,13 +188,13 @@
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
-
+  
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
+  
   .queue-badge {
     position: absolute;
     top: 4px;
@@ -199,7 +214,7 @@
 .track-info {
   flex: 1;
   min-width: 0;
-
+  
   .track-title {
     font-size: 1rem;
     color: #fff;
@@ -209,27 +224,27 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
+  
   .track-artist {
     font-size: 0.85rem;
     color: #8a8a9a;
     margin: 0 0 4px 0;
-
+    
     a {
       color: #8a8a9a;
       text-decoration: none;
       transition: color 0.2s ease;
-
+      
       &:hover {
         color: #ff6b35;
       }
     }
   }
-
+  
   .track-meta {
     display: flex;
     gap: 12px;
-
+    
     .duration,
     .plays {
       font-size: 0.8rem;
@@ -256,23 +271,23 @@
   cursor: pointer;
   transition: all 0.2s ease;
   opacity: 0.7;
-
+  
   &:hover:not(:disabled) {
     background: #ff6b35;
     color: #fff;
     opacity: 1;
   }
-
+  
   &.in-queue {
     background: #22c55e;
     color: #fff;
     opacity: 1;
-
+    
     svg path {
       d: path("M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z");
     }
   }
-
+  
   &:disabled {
     cursor: default;
   }
@@ -296,12 +311,12 @@
   border-radius: 30px;
   cursor: pointer;
   transition: all 0.3s ease;
-
+  
   &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
   }
-
+  
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -313,35 +328,35 @@
   .liked-container {
     padding: 70px 16px 100px;
   }
-
+  
   .page-header {
     flex-direction: column;
     align-items: flex-start;
-
+    
     h1 {
       font-size: 1.5rem;
     }
   }
-
+  
   .header-actions {
     width: 100%;
     justify-content: flex-start;
   }
-
+  
   .track-card {
     padding: 10px 12px;
     gap: 12px;
   }
-
+  
   .track-artwork {
     width: 50px;
     height: 50px;
   }
-
+  
   .track-info .track-meta {
     display: none;
   }
-
+  
   .select-btn,
   .action-btn {
     padding: 8px 14px;

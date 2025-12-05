@@ -22,6 +22,7 @@ import { UserProfileComponent } from './pages/user-profile/user-profile.componen
 import { LikedTracksComponent } from './pages/liked-tracks/liked-tracks.component';
 import { UserTracksComponent } from './pages/user-tracks/user-tracks.component';
 import { PlaylistsComponent } from './pages/playlists/playlists.component';
+import { PlaylistDetailComponent } from './pages/playlist-detail/playlist-detail.component';
 import { UserPlaylistsComponent } from './pages/user-playlists/user-playlists.component';
 import { FollowersComponent } from './pages/followers/followers.component';
 import { FollowingComponent } from './pages/following/following.component';
@@ -56,6 +57,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     LikedTracksComponent,
     UserTracksComponent,
     PlaylistsComponent,
+    PlaylistDetailComponent,
     UserPlaylistsComponent,
     FollowersComponent,
     FollowingComponent,

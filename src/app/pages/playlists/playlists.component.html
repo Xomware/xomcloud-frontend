@@ -41,7 +41,7 @@
     <div 
       class="playlist-card"
       *ngFor="let playlist of getCurrentPlaylists()"
-      (click)="expandPlaylist(playlist)">
+      (click)="goToPlaylist(playlist)">
       
       <div class="playlist-artwork">
         <img 
@@ -70,75 +70,6 @@
           by {{ playlist.user.username }}
         </p>
       </div>
-    </div>
-  </div>
-
-  <!-- Expanded Playlist Modal -->
-  <div class="playlist-modal-backdrop" *ngIf="expandedPlaylist" (click)="closeExpandedPlaylist()"></div>
-  
-  <div class="playlist-modal" *ngIf="expandedPlaylist">
-    <div class="modal-header">
-      <div class="modal-artwork">
-        <img 
-          [src]="getArtworkUrl(expandedPlaylist)" 
-          [alt]="expandedPlaylist.title"
-          (error)="onImageError($event, 'assets/img/default-artwork.png')">
-      </div>
-      <div class="modal-info">
-        <h2>{{ expandedPlaylist.title }}</h2>
-        <p class="modal-meta">
-          {{ expandedPlaylist.track_count }} tracks • {{ getTotalDuration(expandedPlaylist) }}
-        </p>
-        <button class="add-all-btn" (click)="addPlaylistToQueue(expandedPlaylist)">
-          <svg viewBox="0 0 24 24" width="20" height="20">
-            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          Add All to Crate
-        </button>
-      </div>
-      <button class="close-btn" (click)="closeExpandedPlaylist()">✕</button>
-    </div>
-    
-    <div class="modal-tracks" *ngIf="!loadingTracks">
-      <div 
-        class="track-item"
-        *ngFor="let track of expandedPlaylist.tracks; let i = index"
-        [class.in-queue]="isInQueue(track.id)">
-        
-        <span class="track-number">{{ i + 1 }}</span>
-        
-        <div class="track-artwork">
-          <img 
-            [src]="getTrackArtwork(track)" 
-            [alt]="track.title"
-            (error)="onImageError($event, 'assets/img/default-artwork.png')">
-        </div>
-        
-        <div class="track-info">
-          <h4 class="track-title">{{ track.title }}</h4>
-          <p class="track-artist">{{ track.user.username }}</p>
-        </div>
-        
-        <span class="track-duration">{{ formatDuration(track.duration) }}</span>
-        
-        <button 
-          class="add-track-btn"
-          [class.in-queue]="isInQueue(track.id)"
-          [disabled]="isInQueue(track.id)"
-          (click)="addTrackToQueue(track)">
-          <svg *ngIf="!isInQueue(track.id)" viewBox="0 0 24 24" width="18" height="18">
-            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          <svg *ngIf="isInQueue(track.id)" viewBox="0 0 24 24" width="18" height="18">
-            <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    
-    <div class="modal-loading" *ngIf="loadingTracks">
-      <div class="spinner"></div>
-      <p>Loading tracks...</p>
     </div>
   </div>
 </div>

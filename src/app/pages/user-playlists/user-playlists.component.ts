@@ -1,19 +1,19 @@
 // user-playlists.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Playlist } from '../../models';
-import { UserService, PlaylistService, ToastService } from '../../services';
+import { UserService, PlaylistService, ToastService, DownloadQueueService } from '../../services';
 
 @Component({
   selector: 'app-user-playlists',
   templateUrl: './user-playlists.component.html',
-  styleUrls: ['./user-playlists.component.scss'],
+  styleUrls: ['./user-playlists.component.scss']
 })
 export class UserPlaylistsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-
+  
   userId: number | null = null;
   username: string = '';
   playlists: Playlist[] = [];
@@ -22,15 +22,17 @@ export class UserPlaylistsComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private userService: UserService,
     private playlistService: PlaylistService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private queueService: DownloadQueueService
   ) {}
 
   ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
+      .subscribe(params => {
         this.userId = params['id'] ? +params['id'] : null;
         this.username = params['username'] || 'User';
         this.loadPlaylists();
@@ -52,11 +54,10 @@ export class UserPlaylistsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.userService
-      .getUserPlaylists(this.userId, 100)
+    this.userService.getUserPlaylists(this.userId, 100)
       .pipe(
         takeUntil(this.destroy$),
-        finalize(() => (this.loading = false))
+        finalize(() => this.loading = false)
       )
       .subscribe({
         next: (playlists) => {
@@ -66,8 +67,39 @@ export class UserPlaylistsComponent implements OnInit, OnDestroy {
           console.error('Failed to load playlists:', err);
           this.error = 'Failed to load playlists. Please try again.';
           this.toastService.showNegativeToast('Failed to load playlists');
-        },
+        }
       });
+  }
+
+  goToPlaylist(playlist: Playlist): void {
+    this.router.navigate(['/playlist'], { queryParams: { id: playlist.id } });
+  }
+
+  goBackToProfile(): void {
+    if (this.userId) {
+      this.router.navigate(['/user-profile'], { 
+        queryParams: { id: this.userId, username: this.username } 
+      });
+    } else {
+      this.router.navigate(['/my-profile']);
+    }
+  }
+
+  addPlaylistToQueue(playlist: Playlist): void {
+    if (!playlist.tracks || playlist.tracks.length === 0) {
+      this.playlistService.getPlaylistById(playlist.id, true)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (fullPlaylist) => {
+            this.queueService.addMultipleToQueue(fullPlaylist.tracks);
+          },
+          error: () => {
+            this.toastService.showNegativeToast('Failed to add playlist to crate');
+          }
+        });
+    } else {
+      this.queueService.addMultipleToQueue(playlist.tracks);
+    }
   }
 
   getArtworkUrl(playlist: Playlist): string {

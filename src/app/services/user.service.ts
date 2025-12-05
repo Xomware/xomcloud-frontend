@@ -52,6 +52,9 @@ export class UserService {
   getUserId(): number | null {
     return this.currentUser$.value?.id ?? null;
   }
+  getUsername(): string | null {
+    return this.currentUser$.value?.username ?? null;
+  }
 
   clearUserCache(): void {
     this.currentUser$.next(null);

@@ -11,7 +11,7 @@
 
   <div class="profile-content" *ngIf="user && !error">
     <header class="profile-header">
-      <a routerLink="/my-profile" class="back-link">← Back</a>
+      <a routerLink="/my-profile" class="back-link">← Back to My Profile</a>
 
       <div class="profile-banner">
         <div class="banner-overlay"></div>
@@ -66,8 +66,8 @@
           [class.private]="likesPrivate"
           (click)="goToLikes()"
         >
-          <span class="stat-value">{{ formatNumber(stats.likes) }}</span>
-          <span class="stat-label">Likes {{ likesPrivate ? "🔒" : "" }}</span>
+          <span class="stat-value">{{ likesPrivate ? "🔒" : "❤️" }}</span>
+          <span class="stat-label">Likes</span>
         </a>
       </div>
     </section>

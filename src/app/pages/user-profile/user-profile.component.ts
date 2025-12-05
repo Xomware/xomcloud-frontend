@@ -4,39 +4,39 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { User, Track, Playlist } from '../../models';
-import {
-  UserService,
-  TrackService,
-  PlaylistService,
+import { 
+  UserService, 
+  TrackService, 
+  PlaylistService, 
   ToastService,
-  DownloadQueueService,
+  DownloadQueueService 
 } from '../../services';
 
 @Component({
   selector: 'app-user-profile',
   templateUrl: './user-profile.component.html',
-  styleUrls: ['./user-profile.component.scss'],
+  styleUrls: ['./user-profile.component.scss']
 })
 export class UserProfileComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-
+  
   userId: number | null = null;
   user: User | null = null;
   recentTracks: Track[] = [];
   likedTracks: Track[] = [];
   playlists: Playlist[] = [];
-
+  
   loading = true;
   error: string | null = null;
   likesPrivate = false;
   bioExpanded = false;
-
+  
   stats = {
     tracks: 0,
     playlists: 0,
     followers: 0,
     followings: 0,
-    likes: 0,
+    likes: 0
   };
 
   constructor(
@@ -52,7 +52,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
+      .subscribe(params => {
         this.userId = params['id'] ? +params['id'] : null;
         this.loadProfile();
       });
@@ -74,11 +74,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.error = null;
     this.likesPrivate = false;
 
-    this.userService
-      .getUserById(this.userId)
+    this.userService.getUserById(this.userId)
       .pipe(
         takeUntil(this.destroy$),
-        finalize(() => (this.loading = false))
+        finalize(() => this.loading = false)
       )
       .subscribe({
         next: (user) => {
@@ -90,7 +89,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           console.error('Failed to load profile:', err);
           this.error = 'Failed to load profile. Please try again.';
           this.toastService.showNegativeToast('Failed to load profile');
-        },
+        }
       });
   }
 
@@ -100,7 +99,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       playlists: user.playlist_count || 0,
       followers: user.followers_count || 0,
       followings: user.followings_count || 0,
-      likes: user.likes_count ?? user.public_favorites_count ?? 0,
+      likes: user.likes_count ?? user.public_favorites_count ?? 0
     };
   }
 
@@ -108,17 +107,15 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     if (!this.userId) return;
 
     // Load user's tracks
-    this.trackService
-      .getUserTracks(this.userId, 6)
+    this.trackService.getUserTracks(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (tracks) => (this.recentTracks = tracks),
-        error: (err) => console.error('Failed to load tracks:', err),
+        next: (tracks) => this.recentTracks = tracks,
+        error: (err) => console.error('Failed to load tracks:', err)
       });
 
     // Load user's liked tracks
-    this.trackService
-      .getUserLikedTracks(this.userId, 6)
+    this.trackService.getUserLikedTracks(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tracks) => {
@@ -132,16 +129,15 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           if (err.status === 403) {
             this.likesPrivate = true;
           }
-        },
+        }
       });
 
     // Load user's playlists
-    this.userService
-      .getUserPlaylists(this.userId, 6)
+    this.userService.getUserPlaylists(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (playlists) => (this.playlists = playlists),
-        error: (err) => console.error('Failed to load playlists:', err),
+        next: (playlists) => this.playlists = playlists,
+        error: (err) => console.error('Failed to load playlists:', err)
       });
   }
 
@@ -159,32 +155,32 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   goToTracks(): void {
     if (this.user) {
-      this.router.navigate(['/user-tracks'], {
-        queryParams: { id: this.user.id, username: this.user.username },
+      this.router.navigate(['/user-tracks'], { 
+        queryParams: { id: this.user.id, username: this.user.username } 
       });
     }
   }
 
   goToPlaylists(): void {
     if (this.user) {
-      this.router.navigate(['/user-playlists'], {
-        queryParams: { id: this.user.id, username: this.user.username },
+      this.router.navigate(['/user-playlists'], { 
+        queryParams: { id: this.user.id, username: this.user.username } 
       });
     }
   }
 
   goToFollowers(): void {
     if (this.user) {
-      this.router.navigate(['/followers'], {
-        queryParams: { id: this.user.id, username: this.user.username },
+      this.router.navigate(['/followers'], { 
+        queryParams: { id: this.user.id, username: this.user.username } 
       });
     }
   }
 
   goToFollowing(): void {
     if (this.user) {
-      this.router.navigate(['/following'], {
-        queryParams: { id: this.user.id, username: this.user.username },
+      this.router.navigate(['/following'], { 
+        queryParams: { id: this.user.id, username: this.user.username } 
       });
     }
   }
@@ -192,11 +188,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   goToLikes(): void {
     if (this.user) {
       if (this.likesPrivate) {
-        this.toastService.showInfoToast("This user's likes are private");
+        this.toastService.showInfoToast('This user\'s likes are private');
         return;
       }
-      this.router.navigate(['/liked-tracks'], {
-        queryParams: { id: this.user.id, username: this.user.username },
+      this.router.navigate(['/liked-tracks'], { 
+        queryParams: { id: this.user.id, username: this.user.username } 
       });
     }
   }

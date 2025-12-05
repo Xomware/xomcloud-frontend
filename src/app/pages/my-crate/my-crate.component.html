@@ -7,33 +7,56 @@
         My Crate
       </h1>
       <p class="crate-summary" *ngIf="queue.length > 0">
-        {{ queue.length }}/10 tracks • {{ getTotalDuration() }}
-      </p>
-      <p class="crate-limit-warning" *ngIf="queue.length >= 10">
-        ⚠️ Crate is full (max 10 tracks)
+        {{ queue.length }} tracks • {{ getTotalDuration() }}
       </p>
     </div>
 
     <div class="header-actions" *ngIf="queue.length > 0 && !isProcessing">
       <button class="clear-btn" (click)="clearQueue()">Clear All</button>
-      <button
-        class="download-btn"
-        (click)="startDownload()"
-        [disabled]="queue.length === 0"
-      >
+    </div>
+  </header>
+
+  <!-- Selection Bar -->
+  <div class="selection-bar" *ngIf="queue.length > 0 && !isDownloading()">
+    <div class="selection-info">
+      <button class="select-all-btn" (click)="selectAll()">
+        {{ isAllSelected() ? "Deselect All" : "Select First " + MAX_DOWNLOAD }}
+      </button>
+      <span class="selection-count" *ngIf="getSelectedCount() > 0">
+        {{ getSelectedCount() }}/{{ MAX_DOWNLOAD }} selected •
+        {{ getSelectedDuration() }}
+      </span>
+      <span class="selection-hint" *ngIf="getSelectedCount() === 0">
+        Select up to {{ MAX_DOWNLOAD }} tracks to download
+      </span>
+    </div>
+
+    <div class="selection-actions" *ngIf="getSelectedCount() > 0">
+      <button class="remove-selected-btn" (click)="removeSelected()">
+        Remove Selected
+      </button>
+      <button class="download-btn" (click)="downloadSelected()">
         <svg viewBox="0 0 24 24" width="20" height="20">
           <path
             fill="currentColor"
             d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
           />
         </svg>
-        Download All
+        Download {{ getSelectedCount() }}
       </button>
     </div>
-  </header>
+  </div>
 
-  <!-- Download Progress Bar -->
+  <!-- Download Progress Bar with Wave Animation -->
   <div class="download-progress" *ngIf="isDownloading()">
+    <div class="wave-loader">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+
     <div class="progress-info">
       <div class="progress-status">
         <span class="progress-message">{{ downloadProgress.message }}</span>
@@ -42,15 +65,14 @@
       <div class="progress-track" *ngIf="downloadProgress.currentTrack">
         {{ downloadProgress.currentTrack }}
       </div>
-    </div>
-
-    <div class="progress-bar-container">
-      <div
-        class="progress-bar"
-        [style.width.%]="downloadProgress.percentage"
-        [class.complete]="downloadProgress.phase === 'complete'"
-        [class.error]="downloadProgress.phase === 'error'"
-      ></div>
+      <div class="progress-bar-container">
+        <div
+          class="progress-bar"
+          [style.width.%]="downloadProgress.percentage"
+          [class.complete]="downloadProgress.phase === 'complete'"
+          [class.error]="downloadProgress.phase === 'error'"
+        ></div>
+      </div>
     </div>
   </div>
 
@@ -63,6 +85,7 @@
     <p>Add tracks from your liked songs, playlists, or search results</p>
     <div class="empty-actions">
       <a routerLink="/liked-tracks" class="action-link">Browse Liked Tracks</a>
+      <a routerLink="/playlists" class="action-link">Browse Playlists</a>
       <a routerLink="/search" class="action-link">Search for Music</a>
     </div>
   </div>
@@ -72,8 +95,20 @@
     <div
       class="crate-item"
       *ngFor="let item of queue; let i = index"
+      [class.selected]="isSelected(item.track.id)"
       [class.processing]="isProcessing"
+      [class.long-track]="isLongTrack(item.track)"
+      (click)="toggleSelection(item.track.id)"
     >
+      <div class="selection-checkbox">
+        <input
+          type="checkbox"
+          [checked]="isSelected(item.track.id)"
+          (click)="$event.stopPropagation()"
+          (change)="toggleSelection(item.track.id)"
+        />
+      </div>
+
       <span class="item-number">{{ i + 1 }}</span>
 
       <div class="item-artwork">
@@ -87,25 +122,20 @@
       <div class="item-info">
         <h3 class="item-title">{{ item.track.title }}</h3>
         <p class="item-artist">{{ item.track.user.username }}</p>
+        <span class="long-track-badge" *ngIf="isLongTrack(item.track)"
+          >Long track</span
+        >
       </div>
 
       <span class="item-duration">{{
         formatDuration(item.track.duration)
       }}</span>
 
-      <div class="item-actions" *ngIf="!isProcessing">
-        <button
-          class="single-download-btn"
-          (click)="downloadSingleTrack(item.track)"
-          title="Download this track"
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <path
-              fill="currentColor"
-              d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
-            />
-          </svg>
-        </button>
+      <div
+        class="item-actions"
+        *ngIf="!isProcessing"
+        (click)="$event.stopPropagation()"
+      >
         <button
           class="remove-btn"
           (click)="removeFromQueue(item.track.id)"
@@ -122,13 +152,16 @@
     </div>
   </div>
 
-  <!-- Bottom Action Bar (Mobile) -->
-  <div class="mobile-action-bar" *ngIf="queue.length > 0 && !isProcessing">
+  <!-- Mobile Action Bar -->
+  <div
+    class="mobile-action-bar"
+    *ngIf="getSelectedCount() > 0 && !isProcessing"
+  >
     <div class="bar-info">
-      <span class="bar-count">{{ queue.length }} tracks</span>
-      <span class="bar-duration">{{ getTotalDuration() }}</span>
+      <span class="bar-count">{{ getSelectedCount() }} selected</span>
+      <span class="bar-duration">{{ getSelectedDuration() }}</span>
     </div>
-    <button class="bar-download-btn" (click)="startDownload()">
+    <button class="bar-download-btn" (click)="downloadSelected()">
       <svg viewBox="0 0 24 24" width="20" height="20">
         <path
           fill="currentColor"

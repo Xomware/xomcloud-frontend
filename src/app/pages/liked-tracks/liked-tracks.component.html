@@ -3,28 +3,10 @@
 <div class="liked-container" *ngIf="!loading">
   <!-- Header -->
   <header class="page-header">
+    <a class="back-link" *ngIf="!isOwnLikes" (click)="goBackToProfile()">← Back to Profile</a>
     <div class="header-content">
       <h1>{{ getPageTitle() }}</h1>
       <p class="track-count" *ngIf="tracks.length > 0">{{ tracks.length }} tracks</p>
-    </div>
-    
-    <div class="header-actions" *ngIf="tracks.length > 0">
-      <button 
-        class="select-btn" 
-        [class.active]="selectionMode"
-        (click)="toggleSelectionMode()">
-        {{ selectionMode ? 'Cancel' : 'Select' }}
-      </button>
-      
-      <ng-container *ngIf="selectionMode">
-        <button class="action-btn" (click)="selectAll()">Select All</button>
-        <button 
-          class="action-btn primary" 
-          [disabled]="selectedTracks.size === 0"
-          (click)="addSelectedToQueue()">
-          Add {{ selectedTracks.size }} to Crate
-        </button>
-      </ng-container>
     </div>
   </header>
 
@@ -55,17 +37,7 @@
     <div 
       class="track-card"
       *ngFor="let track of tracks"
-      [class.selected]="isSelected(track.id)"
-      [class.in-queue]="isInQueue(track.id)"
-      (click)="selectionMode ? toggleTrackSelection(track.id) : null">
-      
-      <!-- Selection Checkbox -->
-      <div class="selection-checkbox" *ngIf="selectionMode">
-        <input 
-          type="checkbox" 
-          [checked]="isSelected(track.id)"
-          (change)="toggleTrackSelection(track.id)">
-      </div>
+      [class.in-queue]="isInQueue(track.id)">
       
       <!-- Artwork -->
       <div class="track-artwork">
@@ -96,16 +68,19 @@
         </div>
       </div>
       
-      <!-- Actions -->
-      <div class="track-actions" *ngIf="!selectionMode">
+      <!-- Add Button -->
+      <div class="track-actions">
         <button 
           class="add-btn"
           [class.in-queue]="isInQueue(track.id)"
           [disabled]="isInQueue(track.id)"
           (click)="addToQueue(track); $event.stopPropagation()"
           [title]="isInQueue(track.id) ? 'Already in crate' : 'Add to crate'">
-          <svg viewBox="0 0 24 24" width="20" height="20">
+          <svg viewBox="0 0 24 24" width="20" height="20" *ngIf="!isInQueue(track.id)">
             <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          <svg viewBox="0 0 24 24" width="20" height="20" *ngIf="isInQueue(track.id)">
+            <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
           </svg>
         </button>
       </div>

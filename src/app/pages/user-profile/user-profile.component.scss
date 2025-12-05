@@ -17,7 +17,7 @@
   padding: 8px 16px;
   border-radius: 20px;
   transition: all 0.3s ease;
-
+  
   &:hover {
     background: rgba(255, 107, 53, 0.3);
     color: #ff6b35;
@@ -30,22 +30,22 @@
   justify-content: center;
   align-items: center;
   min-height: 60vh;
-
+  
   .error-content {
     text-align: center;
-
+    
     .error-icon {
       font-size: 4rem;
       display: block;
       margin-bottom: 24px;
     }
-
+    
     h2 {
       color: #fff;
       font-size: 1.3rem;
       margin: 0 0 24px 0;
     }
-
+    
     .retry-btn {
       padding: 12px 32px;
       background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
@@ -55,7 +55,7 @@
       font-size: 1rem;
       cursor: pointer;
       transition: all 0.3s ease;
-
+      
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
@@ -74,15 +74,11 @@
   height: 200px;
   background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #e94e77 100%);
   position: relative;
-
+  
   .banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(10, 10, 20, 0.8) 100%
-    );
+    background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 20, 0.8) 100%);
   }
 }
 
@@ -99,7 +95,7 @@
 
 .avatar-container {
   flex-shrink: 0;
-
+  
   .avatar {
     width: 180px;
     height: 180px;
@@ -113,26 +109,26 @@
 .user-details {
   flex: 1;
   padding-bottom: 16px;
-
+  
   .username {
     font-size: 2.5rem;
     color: #fff;
     margin: 0 0 4px 0;
     font-weight: 700;
   }
-
+  
   .handle {
     color: #b0b0c0;
     font-size: 1.1rem;
     margin: 0 0 8px 0;
   }
-
+  
   .location {
     color: #8a8a9a;
     font-size: 0.95rem;
     margin: 0 0 4px 0;
   }
-
+  
   .join-date {
     color: #6a6a7a;
     font-size: 0.9rem;
@@ -150,7 +146,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-
+  
   &:hover {
     background: rgba(255, 107, 53, 0.1);
   }
@@ -170,11 +166,7 @@
 }
 
 .stat-card {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 24px;
@@ -182,22 +174,30 @@
   transition: all 0.3s ease;
   text-decoration: none;
   display: block;
-
+  
   &.clickable {
     cursor: pointer;
-
+    
     &:hover {
       border-color: rgba(255, 107, 53, 0.4);
       transform: translateY(-4px);
-      background: linear-gradient(
-        135deg,
-        rgba(255, 107, 53, 0.15) 0%,
-        rgba(247, 147, 30, 0.1) 100%
-      );
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(247, 147, 30, 0.1) 100%);
       box-shadow: 0 8px 25px rgba(255, 107, 53, 0.2);
     }
   }
-
+  
+  &.private {
+    opacity: 0.6;
+    cursor: default;
+    
+    &:hover {
+      transform: none;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+    }
+  }
+  
   .stat-value {
     display: block;
     font-size: 2rem;
@@ -205,7 +205,7 @@
     color: #ff6b35;
     margin-bottom: 4px;
   }
-
+  
   .stat-label {
     font-size: 0.9rem;
     color: #8a8a9a;
@@ -219,22 +219,22 @@
   max-width: 1200px;
   margin: 0 auto 48px;
   padding: 0 24px;
-
+  
   .bio-container {
     position: relative;
     max-height: 80px;
     overflow: hidden;
     transition: max-height 0.3s ease;
-
+    
     &.expanded {
       max-height: 1000px;
-
+      
       .bio-fade {
         display: none;
       }
     }
   }
-
+  
   .bio-text {
     color: #b0b0c0;
     font-size: 1rem;
@@ -243,7 +243,7 @@
     max-width: 800px;
     white-space: pre-wrap;
   }
-
+  
   .bio-fade {
     position: absolute;
     bottom: 0;
@@ -253,7 +253,7 @@
     background: linear-gradient(transparent, #0d0d1a);
     pointer-events: none;
   }
-
+  
   .bio-toggle {
     margin-top: 12px;
     padding: 8px 16px;
@@ -265,7 +265,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-
+    
     &:hover {
       background: rgba(255, 107, 53, 0.15);
       border-color: rgba(255, 107, 53, 0.3);
@@ -294,7 +294,7 @@
   font-size: 0.95rem;
   font-weight: 500;
   transition: color 0.3s ease;
-
+  
   &:hover {
     color: #f7931e;
   }
@@ -314,20 +314,16 @@
 }
 
 .track-card {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-
+  
   &:hover {
     transform: translateY(-8px);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-
+    
     .play-overlay {
       opacity: 1;
     }
@@ -337,13 +333,13 @@
 .track-artwork {
   position: relative;
   aspect-ratio: 1;
-
+  
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
+  
   .play-overlay {
     position: absolute;
     inset: 0;
@@ -353,7 +349,7 @@
     justify-content: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-
+    
     svg {
       color: #fff;
     }
@@ -407,11 +403,11 @@
   padding: 24px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-
+  
   .lock-icon {
     font-size: 1.5rem;
   }
-
+  
   p {
     color: #8a8a9a;
     margin: 0;
@@ -425,7 +421,7 @@
 
 .track-info {
   padding: 16px;
-
+  
   .track-title {
     font-size: 0.95rem;
     color: #fff;
@@ -435,7 +431,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
+  
   .track-artist {
     font-size: 0.85rem;
     color: #8a8a9a;
@@ -460,16 +456,12 @@
 }
 
 .playlist-card {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-
+  
   &:hover {
     transform: translateY(-8px);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
@@ -478,7 +470,7 @@
 
 .playlist-artwork {
   aspect-ratio: 1;
-
+  
   img {
     width: 100%;
     height: 100%;
@@ -488,7 +480,7 @@
 
 .playlist-info {
   padding: 16px;
-
+  
   .playlist-title {
     font-size: 1rem;
     color: #fff;
@@ -498,7 +490,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
+  
   .playlist-tracks {
     font-size: 0.85rem;
     color: #8a8a9a;
@@ -515,36 +507,36 @@
     margin-top: -60px;
     gap: 16px;
   }
-
+  
   .avatar-container .avatar {
     width: 140px;
     height: 140px;
   }
-
+  
   .user-details {
     padding-bottom: 0;
-
+    
     .username {
       font-size: 1.8rem;
     }
   }
-
+  
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-
+    
     .stat-card:last-child {
       grid-column: span 2;
     }
   }
-
+  
   .stat-card {
     padding: 16px;
-
+    
     .stat-value {
       font-size: 1.5rem;
     }
   }
-
+  
   .tracks-grid,
   .playlists-grid {
     grid-template-columns: repeat(2, 1fr);

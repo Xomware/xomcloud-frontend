@@ -8,6 +8,7 @@ import { UserProfileComponent } from './pages/user-profile/user-profile.componen
 import { LikedTracksComponent } from './pages/liked-tracks/liked-tracks.component';
 import { UserTracksComponent } from './pages/user-tracks/user-tracks.component';
 import { PlaylistsComponent } from './pages/playlists/playlists.component';
+import { PlaylistDetailComponent } from './pages/playlist-detail/playlist-detail.component';
 import { UserPlaylistsComponent } from './pages/user-playlists/user-playlists.component';
 import { FollowersComponent } from './pages/followers/followers.component';
 import { FollowingComponent } from './pages/following/following.component';
@@ -24,6 +25,7 @@ const routes: Routes = [
   { path: 'liked-tracks', component: LikedTracksComponent, canActivate: [AuthGuard] },
   { path: 'user-tracks', component: UserTracksComponent, canActivate: [AuthGuard] },
   { path: 'playlists', component: PlaylistsComponent, canActivate: [AuthGuard] },
+  { path: 'playlist', component: PlaylistDetailComponent, canActivate: [AuthGuard] },
   { path: 'user-playlists', component: UserPlaylistsComponent, canActivate: [AuthGuard] },
   { path: 'followers', component: FollowersComponent, canActivate: [AuthGuard] },
   { path: 'following', component: FollowingComponent, canActivate: [AuthGuard] },

@@ -1,5 +1,6 @@
 // playlists.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Playlist, Track } from '../../models';
@@ -17,14 +18,11 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   likedPlaylists: Playlist[] = [];
   loading = true;
   error: string | null = null;
-  
-  // Expanded playlist view
-  expandedPlaylist: Playlist | null = null;
-  loadingTracks = false;
 
   activeTab: 'my' | 'liked' = 'my';
 
   constructor(
+    private router: Router,
     private playlistService: PlaylistService,
     private trackService: TrackService,
     private toastService: ToastService,
@@ -77,57 +75,19 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
 
   setActiveTab(tab: 'my' | 'liked'): void {
     this.activeTab = tab;
-    this.expandedPlaylist = null;
   }
 
   getCurrentPlaylists(): Playlist[] {
     return this.activeTab === 'my' ? this.playlists : this.likedPlaylists;
   }
 
-  // ==================== Playlist Expansion ====================
+  // ==================== Navigation ====================
 
-  expandPlaylist(playlist: Playlist): void {
-    if (this.expandedPlaylist?.id === playlist.id) {
-      this.expandedPlaylist = null;
-      return;
-    }
-
-    if (playlist.tracks && playlist.tracks.length > 0) {
-      this.expandedPlaylist = playlist;
-      return;
-    }
-
-    this.loadingTracks = true;
-    this.playlistService.getPlaylistById(playlist.id, true)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.loadingTracks = false)
-      )
-      .subscribe({
-        next: (fullPlaylist) => {
-          this.expandedPlaylist = fullPlaylist;
-          // Update in cache
-          const index = this.playlists.findIndex(p => p.id === playlist.id);
-          if (index !== -1) {
-            this.playlists[index] = fullPlaylist;
-          }
-        },
-        error: (err) => {
-          console.error('Failed to load playlist tracks:', err);
-          this.toastService.showNegativeToast('Failed to load tracks');
-        }
-      });
-  }
-
-  closeExpandedPlaylist(): void {
-    this.expandedPlaylist = null;
+  goToPlaylist(playlist: Playlist): void {
+    this.router.navigate(['/playlist'], { queryParams: { id: playlist.id } });
   }
 
   // ==================== Queue Actions ====================
-
-  addTrackToQueue(track: Track): void {
-    this.queueService.addToQueue(track);
-  }
 
   addPlaylistToQueue(playlist: Playlist): void {
     if (!playlist.tracks || playlist.tracks.length === 0) {

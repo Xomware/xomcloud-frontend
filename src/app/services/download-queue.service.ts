@@ -49,16 +49,7 @@ export class DownloadQueueService {
 
   // ==================== Add/Remove Operations ====================
 
-  private readonly MAX_TRACKS = 10;
-
   addToQueue(track: Track): boolean {
-    if (this.queue$.value.length >= this.MAX_TRACKS) {
-      this.toastService.showNegativeToast(
-        `Crate is full (max ${this.MAX_TRACKS} tracks)`
-      );
-      return false;
-    }
-
     if (this.isInQueue(track.id)) {
       this.toastService.showInfoToast('Track already in your crate');
       return false;
@@ -73,35 +64,16 @@ export class DownloadQueueService {
     this.queue$.next([...currentQueue, queuedTrack]);
     this.saveToStorage();
 
-    const remaining = this.MAX_TRACKS - this.queue$.value.length;
-    if (remaining <= 3 && remaining > 0) {
-      this.toastService.showPositiveToast(
-        `Added "${track.title}" (${remaining} slots left)`
-      );
-    } else {
-      this.toastService.showPositiveToast(
-        `Added "${track.title}" to your crate`
-      );
-    }
+    this.toastService.showPositiveToast(`Added "${track.title}" to your crate`);
     return true;
   }
 
   addMultipleToQueue(tracks: Track[]): number {
     let addedCount = 0;
     const currentQueue = [...this.queue$.value];
-    const availableSlots = this.MAX_TRACKS - currentQueue.length;
 
-    if (availableSlots <= 0) {
-      this.toastService.showNegativeToast(
-        `Crate is full (max ${this.MAX_TRACKS} tracks)`
-      );
-      return 0;
-    }
-
-    const tracksToAdd = tracks.slice(0, availableSlots);
-
-    tracksToAdd.forEach((track) => {
-      if (!this.isInQueue(track.id) && currentQueue.length < this.MAX_TRACKS) {
+    tracks.forEach((track) => {
+      if (!this.isInQueue(track.id)) {
         currentQueue.push({
           track,
           addedAt: new Date(),

@@ -8,7 +8,7 @@
 
 .page-header {
   margin-bottom: 32px;
-
+  
   .back-link {
     color: #8a8a9a;
     text-decoration: none;
@@ -16,18 +16,18 @@
     display: inline-block;
     margin-bottom: 16px;
     transition: color 0.3s ease;
-
+    
     &:hover {
       color: #ff6b35;
     }
   }
-
+  
   h1 {
     font-size: 2rem;
     color: #fff;
     margin: 0 0 8px 0;
   }
-
+  
   .playlist-count {
     color: #8a8a9a;
     font-size: 1rem;
@@ -35,32 +35,30 @@
   }
 }
 
-.error-state,
-.empty-state {
+.error-state, .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 300px;
   text-align: center;
-
-  .error-icon,
-  .empty-icon {
+  
+  .error-icon, .empty-icon {
     font-size: 4rem;
     margin-bottom: 24px;
   }
-
+  
   h2 {
     color: #fff;
     font-size: 1.3rem;
     margin: 0 0 12px 0;
   }
-
+  
   p {
     color: #8a8a9a;
     margin: 0 0 24px 0;
   }
-
+  
   .retry-btn {
     padding: 12px 32px;
     background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
@@ -69,7 +67,7 @@
     border-radius: 25px;
     cursor: pointer;
     transition: all 0.3s ease;
-
+    
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
@@ -89,44 +87,62 @@
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-
+  
   &:hover {
     transform: translateY(-4px);
     background: rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-
-    .play-overlay {
-      opacity: 1;
-    }
   }
 }
 
 .playlist-artwork {
   aspect-ratio: 1;
   position: relative;
-
+  
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
-  .play-overlay {
+  
+  .playlist-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-    color: #fff;
+    
+    .add-all-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(255, 107, 53, 0.5);
+      }
+    }
   }
+}
+
+.playlist-card:hover .playlist-overlay {
+  opacity: 1;
 }
 
 .playlist-info {
   padding: 16px;
-
+  
   .playlist-title {
     font-size: 1rem;
     color: #fff;
@@ -136,7 +152,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
+  
   .playlist-meta {
     font-size: 0.85rem;
     color: #8a8a9a;
@@ -148,12 +164,12 @@
   .user-playlists-container {
     padding: 80px 16px 120px;
   }
-
+  
   .playlists-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 16px;
   }
-
+  
   .playlist-info {
     padding: 12px;
   }
