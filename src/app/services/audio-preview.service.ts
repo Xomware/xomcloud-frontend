@@ -152,17 +152,30 @@ export class AudioPreviewService {
     // Extract numeric ID from track (may be prefixed with "soundcloud:tracks:")
     const numericId = String(track.id).replace('soundcloud:tracks:', '');
 
-    // Build the stream URL - the Audio element will follow the 302 redirect automatically
-    const token = this.authService.getAccessToken();
-    if (!token) {
-      console.error('No access token available');
-      return null;
+    try {
+      // Use /streams endpoint (plural) - returns pre-signed URLs that don't need auth
+      const streamsUrl = `${environment.apiBaseUrl}/tracks/${numericId}/streams`;
+      const response = await this.http
+        .get<any>(streamsUrl, {
+          headers: this.authService.getAuthHeaders(),
+        })
+        .toPromise();
+
+      // Prefer http_mp3_128_url (direct MP3), fallback to hls
+      const url =
+        response?.http_mp3_128_url ||
+        response?.hls_mp3_128_url ||
+        response?.hls_opus_64_url;
+      if (url) {
+        console.log('Got stream URL for:', track.title);
+        return url;
+      }
+    } catch (e: any) {
+      console.warn('Failed to get streams URL:', e.status, e.message);
     }
 
-    // Return the stream URL directly - browser's Audio element handles the redirect
-    const streamUrl = `${environment.apiBaseUrl}/tracks/${numericId}/stream?oauth_token=${token}`;
-    console.log('Stream URL for:', track.title);
-    return streamUrl;
+    console.error('No stream URL found for track:', track.title);
+    return null;
   }
 
   private appendAuth(url: string): string {
