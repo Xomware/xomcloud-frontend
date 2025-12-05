@@ -149,13 +149,24 @@ export class AudioPreviewService {
   // ==================== Stream URL Resolution ====================
 
   private async getStreamUrl(track: Track): Promise<string | null> {
-    // Extract numeric ID - handle both number and "soundcloud:tracks:123" format
-    let numericId: string;
-    if (typeof track.id === 'number') {
-      numericId = String(track.id);
+    // Extract numeric ID - the id might be a number or string like "soundcloud:tracks:123"
+    let numericId: number;
+    const idStr = String(track.id);
+
+    if (idStr.includes(':')) {
+      // Format: "soundcloud:tracks:2215372484" -> extract last part
+      const parts = idStr.split(':');
+      numericId = parseInt(parts[parts.length - 1], 10);
     } else {
-      numericId = String(track.id).replace(/^soundcloud:tracks:/, '');
+      numericId = parseInt(idStr, 10);
     }
+
+    if (isNaN(numericId)) {
+      console.error('Invalid track ID:', track.id);
+      return null;
+    }
+
+    console.log('Fetching stream for track:', track.title, 'ID:', numericId);
 
     try {
       // Use /streams endpoint - returns pre-signed CloudFront URLs
@@ -166,7 +177,7 @@ export class AudioPreviewService {
         })
         .toPromise();
 
-      // Prefer http_mp3_128_url (direct MP3), fallback to others
+      // Prefer http_mp3_128_url (direct MP3), fallback to hls
       const url = response?.http_mp3_128_url || response?.hls_mp3_128_url;
       if (url) {
         console.log('Got stream URL for:', track.title);
