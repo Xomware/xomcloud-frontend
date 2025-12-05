@@ -66,7 +66,6 @@ export class AudioPreviewService {
 
       this.audio = new Audio(streamUrl);
       this.audio.volume = 0.7;
-      this.audio.crossOrigin = 'anonymous';
 
       // Set up event listeners
       this.audio.onloadedmetadata = () => {
@@ -153,63 +152,42 @@ export class AudioPreviewService {
     // Extract numeric ID from track (may be prefixed with "soundcloud:tracks:")
     const numericId = String(track.id).replace('soundcloud:tracks:', '');
 
-    // Priority 1: Try media transcodings (most reliable)
-    if (track.media?.transcodings?.length) {
-      // Prefer progressive (direct MP3) over HLS
-      const progressive = track.media.transcodings.find(
-        (t) => t.format.protocol === 'progressive' && !t.snipped
-      );
-      const progressiveSnipped = track.media.transcodings.find(
-        (t) => t.format.protocol === 'progressive' && t.snipped
-      );
-      const hls = track.media.transcodings.find(
-        (t) => t.format.protocol === 'hls'
-      );
+    try {
+      // Use the /streams endpoint which returns direct URLs
+      const streamsUrl = `${environment.apiBaseUrl}/tracks/${numericId}/streams`;
+      const response = await this.http
+        .get<any>(streamsUrl, {
+          headers: this.authService.getAuthHeaders(),
+        })
+        .toPromise();
 
-      // Try full track first, then snipped preview
-      const transcoding = progressive || progressiveSnipped || hls;
-      if (transcoding) {
+      // Prefer http_mp3_128_url, fallback to hls
+      const url = response?.http_mp3_128_url || response?.hls_mp3_128_url;
+      if (url) {
+        console.log('Got stream URL for:', track.title);
+        return url;
+      }
+    } catch (e) {
+      console.warn('Failed to get streams URL:', e);
+    }
+
+    // Fallback: try media transcodings if available
+    if (track.media?.transcodings?.length) {
+      const progressive = track.media.transcodings.find(
+        (t) => t.format.protocol === 'progressive'
+      );
+      if (progressive) {
         try {
-          const resolved = await this.resolveTranscodingUrl(transcoding.url);
-          if (resolved) {
-            console.log('Using transcoding URL for:', track.title);
-            return resolved;
-          }
+          const resolved = await this.resolveTranscodingUrl(progressive.url);
+          if (resolved) return resolved;
         } catch (e) {
           console.warn('Failed to resolve transcoding URL:', e);
         }
       }
     }
 
-    // Priority 2: Try fetching track details to get media transcodings
-    try {
-      const trackDetails = await this.fetchTrackDetails(numericId);
-      if (trackDetails?.media?.transcodings?.length) {
-        const progressive = trackDetails.media.transcodings.find(
-          (t: any) => t.format.protocol === 'progressive'
-        );
-        if (progressive) {
-          const resolved = await this.resolveTranscodingUrl(progressive.url);
-          if (resolved) {
-            console.log('Using fetched transcoding URL for:', track.title);
-            return resolved;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to fetch track details:', e);
-    }
-
-    // Priority 3: Direct stream URL (often blocked by CORS or returns 401)
-    console.log('Falling back to direct stream URL for:', track.title);
-    const streamUrl = `${environment.apiBaseUrl}/tracks/${numericId}/stream`;
-    return this.appendAuth(streamUrl);
-  }
-
-  private async fetchTrackDetails(trackId: string): Promise<any> {
-    const url = `${environment.apiBaseUrl}/tracks/${trackId}`;
-    const authUrl = this.appendAuth(url);
-    return this.http.get(authUrl).toPromise();
+    console.error('No stream URL found for track:', track.title);
+    return null;
   }
 
   private async resolveTranscodingUrl(url: string): Promise<string | null> {
