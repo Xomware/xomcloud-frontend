@@ -15,7 +15,7 @@ export interface PreviewState {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AudioPreviewService {
   private audio: HTMLAudioElement | null = null;
@@ -24,15 +24,12 @@ export class AudioPreviewService {
     trackId: null,
     progress: 0,
     duration: 0,
-    currentTime: 0
+    currentTime: 0,
   });
 
   private progressInterval: any = null;
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService
-  ) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   getState$(): Observable<PreviewState> {
     return this.state$.asObservable();
@@ -69,11 +66,12 @@ export class AudioPreviewService {
 
       this.audio = new Audio(streamUrl);
       this.audio.volume = 0.7;
+      this.audio.crossOrigin = 'anonymous';
 
       // Set up event listeners
       this.audio.onloadedmetadata = () => {
         this.updateState({
-          duration: this.audio?.duration || 30
+          duration: this.audio?.duration || 30,
         });
       };
 
@@ -92,12 +90,11 @@ export class AudioPreviewService {
         isPlaying: true,
         trackId: track.id,
         progress: 0,
-        currentTime: 0
+        currentTime: 0,
       });
 
       // Start progress tracking
       this.startProgressTracking();
-
     } catch (error) {
       console.error('Failed to play track:', error);
       this.stop();
@@ -122,7 +119,7 @@ export class AudioPreviewService {
 
   stop(): void {
     this.stopProgressTracking();
-    
+
     if (this.audio) {
       this.audio.pause();
       this.audio.src = '';
@@ -134,7 +131,7 @@ export class AudioPreviewService {
       trackId: null,
       progress: 0,
       duration: 0,
-      currentTime: 0
+      currentTime: 0,
     });
   }
 
@@ -153,40 +150,74 @@ export class AudioPreviewService {
   // ==================== Stream URL Resolution ====================
 
   private async getStreamUrl(track: Track): Promise<string | null> {
-    // Try media transcodings first (newer API)
+    // Extract numeric ID from track (may be prefixed with "soundcloud:tracks:")
+    const numericId = String(track.id).replace('soundcloud:tracks:', '');
+
+    // Priority 1: Try media transcodings (most reliable)
     if (track.media?.transcodings?.length) {
+      // Prefer progressive (direct MP3) over HLS
       const progressive = track.media.transcodings.find(
-        t => t.format.protocol === 'progressive'
+        (t) => t.format.protocol === 'progressive' && !t.snipped
+      );
+      const progressiveSnipped = track.media.transcodings.find(
+        (t) => t.format.protocol === 'progressive' && t.snipped
       );
       const hls = track.media.transcodings.find(
-        t => t.format.protocol === 'hls'
+        (t) => t.format.protocol === 'hls'
       );
 
-      const transcoding = progressive || hls;
+      // Try full track first, then snipped preview
+      const transcoding = progressive || progressiveSnipped || hls;
       if (transcoding) {
         try {
           const resolved = await this.resolveTranscodingUrl(transcoding.url);
-          if (resolved) return resolved;
+          if (resolved) {
+            console.log('Using transcoding URL for:', track.title);
+            return resolved;
+          }
         } catch (e) {
           console.warn('Failed to resolve transcoding URL:', e);
         }
       }
     }
 
-    // Fallback to stream_url
-    if (track.stream_url) {
-      return this.appendAuth(track.stream_url);
+    // Priority 2: Try fetching track details to get media transcodings
+    try {
+      const trackDetails = await this.fetchTrackDetails(numericId);
+      if (trackDetails?.media?.transcodings?.length) {
+        const progressive = trackDetails.media.transcodings.find(
+          (t: any) => t.format.protocol === 'progressive'
+        );
+        if (progressive) {
+          const resolved = await this.resolveTranscodingUrl(progressive.url);
+          if (resolved) {
+            console.log('Using fetched transcoding URL for:', track.title);
+            return resolved;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch track details:', e);
     }
 
-    // Last resort: construct URL from track ID
-    const constructedUrl = `${environment.apiBaseUrl}/tracks/${track.id}/stream`;
-    return this.appendAuth(constructedUrl);
+    // Priority 3: Direct stream URL (often blocked by CORS or returns 401)
+    console.log('Falling back to direct stream URL for:', track.title);
+    const streamUrl = `${environment.apiBaseUrl}/tracks/${numericId}/stream`;
+    return this.appendAuth(streamUrl);
+  }
+
+  private async fetchTrackDetails(trackId: string): Promise<any> {
+    const url = `${environment.apiBaseUrl}/tracks/${trackId}`;
+    const authUrl = this.appendAuth(url);
+    return this.http.get(authUrl).toPromise();
   }
 
   private async resolveTranscodingUrl(url: string): Promise<string | null> {
     try {
       const authUrl = this.appendAuth(url);
-      const response = await this.http.get<{ url: string }>(authUrl).toPromise();
+      const response = await this.http
+        .get<{ url: string }>(authUrl)
+        .toPromise();
       return response?.url || null;
     } catch (error) {
       console.error('Failed to resolve transcoding URL:', error);
@@ -196,6 +227,7 @@ export class AudioPreviewService {
 
   private appendAuth(url: string): string {
     const token = this.authService.getAccessToken();
+    if (!token) return url;
     const separator = url.includes('?') ? '&' : '?';
     return `${url}${separator}oauth_token=${token}`;
   }
@@ -204,7 +236,7 @@ export class AudioPreviewService {
 
   private startProgressTracking(): void {
     this.stopProgressTracking();
-    
+
     this.progressInterval = setInterval(() => {
       if (this.audio) {
         const currentTime = this.audio.currentTime;
@@ -214,7 +246,7 @@ export class AudioPreviewService {
         this.updateState({
           currentTime,
           duration,
-          progress: Math.min(progress, 100)
+          progress: Math.min(progress, 100),
         });
       }
     }, 100);
@@ -230,7 +262,7 @@ export class AudioPreviewService {
   private updateState(partial: Partial<PreviewState>): void {
     this.state$.next({
       ...this.state$.value,
-      ...partial
+      ...partial,
     });
   }
 }
