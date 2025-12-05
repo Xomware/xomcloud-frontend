@@ -152,65 +152,17 @@ export class AudioPreviewService {
     // Extract numeric ID from track (may be prefixed with "soundcloud:tracks:")
     const numericId = String(track.id).replace('soundcloud:tracks:', '');
 
-    try {
-      // Per SoundCloud docs: GET /tracks/:id/stream returns redirect to actual stream
-      // We need to call this endpoint and it will return available transcodings
-      const streamUrl = `${environment.apiBaseUrl}/tracks/${numericId}/stream`;
-      const response = await this.http
-        .get<any>(streamUrl, {
-          headers: this.authService.getAuthHeaders(),
-        })
-        .toPromise();
-
-      // Response contains url property with the actual stream
-      if (response?.url) {
-        console.log('Got stream URL for:', track.title);
-        return response.url;
-      }
-
-      // Or it might return http_mp3_128_url directly
-      if (response?.http_mp3_128_url) {
-        return response.http_mp3_128_url;
-      }
-    } catch (e: any) {
-      // Check if track access is blocked
-      if (e.status === 403 || e.status === 401) {
-        console.warn('Track streaming not allowed:', track.title);
-      } else {
-        console.warn('Failed to get stream URL:', e);
-      }
-    }
-
-    // Fallback: try media transcodings if available on track object
-    if (track.media?.transcodings?.length) {
-      const progressive = track.media.transcodings.find(
-        (t) => t.format.protocol === 'progressive'
-      );
-      if (progressive) {
-        try {
-          const resolved = await this.resolveTranscodingUrl(progressive.url);
-          if (resolved) return resolved;
-        } catch (e) {
-          console.warn('Failed to resolve transcoding URL:', e);
-        }
-      }
-    }
-
-    console.error('No stream URL found for track:', track.title);
-    return null;
-  }
-
-  private async resolveTranscodingUrl(url: string): Promise<string | null> {
-    try {
-      const authUrl = this.appendAuth(url);
-      const response = await this.http
-        .get<{ url: string }>(authUrl)
-        .toPromise();
-      return response?.url || null;
-    } catch (error) {
-      console.error('Failed to resolve transcoding URL:', error);
+    // Build the stream URL - the Audio element will follow the 302 redirect automatically
+    const token = this.authService.getAccessToken();
+    if (!token) {
+      console.error('No access token available');
       return null;
     }
+
+    // Return the stream URL directly - browser's Audio element handles the redirect
+    const streamUrl = `${environment.apiBaseUrl}/tracks/${numericId}/stream?oauth_token=${token}`;
+    console.log('Stream URL for:', track.title);
+    return streamUrl;
   }
 
   private appendAuth(url: string): string {
