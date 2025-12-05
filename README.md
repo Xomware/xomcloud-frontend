@@ -166,8 +166,4 @@ MIT License - feel free to use this for your own projects!
 
 ## Author
 
-Built with 🎵 by [@domgiordano](https://github.com/domgiordano)
-
----
-
-_Inspired by [XOMIFY](https://xomify.com) - the Spotify version_
+Built by [@domgiordano](https://github.com/domgiordano)
