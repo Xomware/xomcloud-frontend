@@ -118,10 +118,10 @@ export class DownloadService {
       0
     );
 
-    // Estimate processing time: ~1 second per 120 seconds of audio (4x faster), minimum 3s, max 75s
+    // Estimate processing time: ~1 second per 240 seconds of audio (8x original), minimum 2s, max 40s
     const estimatedProcessingMs = Math.max(
-      3000,
-      Math.min(totalDurationMs / 120, 75000)
+      2000,
+      Math.min(totalDurationMs / 240, 40000)
     );
 
     const updateInterval = 200; // Update every 200ms for smooth animation

@@ -149,11 +149,16 @@ export class AudioPreviewService {
   // ==================== Stream URL Resolution ====================
 
   private async getStreamUrl(track: Track): Promise<string | null> {
-    // Extract numeric ID from track (may be prefixed with "soundcloud:tracks:")
-    const numericId = String(track.id).replace('soundcloud:tracks:', '');
+    // Extract numeric ID - handle both number and "soundcloud:tracks:123" format
+    let numericId: string;
+    if (typeof track.id === 'number') {
+      numericId = String(track.id);
+    } else {
+      numericId = String(track.id).replace(/^soundcloud:tracks:/, '');
+    }
 
     try {
-      // Use /streams endpoint (plural) - returns pre-signed URLs that don't need auth
+      // Use /streams endpoint - returns pre-signed CloudFront URLs
       const streamsUrl = `${environment.apiBaseUrl}/tracks/${numericId}/streams`;
       const response = await this.http
         .get<any>(streamsUrl, {
@@ -161,11 +166,8 @@ export class AudioPreviewService {
         })
         .toPromise();
 
-      // Prefer http_mp3_128_url (direct MP3), fallback to hls
-      const url =
-        response?.http_mp3_128_url ||
-        response?.hls_mp3_128_url ||
-        response?.hls_opus_64_url;
+      // Prefer http_mp3_128_url (direct MP3), fallback to others
+      const url = response?.http_mp3_128_url || response?.hls_mp3_128_url;
       if (url) {
         console.log('Got stream URL for:', track.title);
         return url;
@@ -176,13 +178,6 @@ export class AudioPreviewService {
 
     console.error('No stream URL found for track:', track.title);
     return null;
-  }
-
-  private appendAuth(url: string): string {
-    const token = this.authService.getAccessToken();
-    if (!token) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}oauth_token=${token}`;
   }
 
   // ==================== Progress Tracking ====================
