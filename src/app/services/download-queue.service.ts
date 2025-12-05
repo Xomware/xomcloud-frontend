@@ -10,7 +10,7 @@ export interface QueuedTrack {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DownloadQueueService {
   private readonly STORAGE_KEY = 'xomcloud_download_queue';
@@ -36,20 +36,29 @@ export class DownloadQueueService {
   }
 
   getQueueCount$(): Observable<number> {
-    return new Observable(observer => {
-      this.queue$.subscribe(queue => {
+    return new Observable((observer) => {
+      this.queue$.subscribe((queue) => {
         observer.next(queue.length);
       });
     });
   }
 
   isInQueue(trackId: number): boolean {
-    return this.queue$.value.some(item => item.track.id === trackId);
+    return this.queue$.value.some((item) => item.track.id === trackId);
   }
 
   // ==================== Add/Remove Operations ====================
 
+  private readonly MAX_TRACKS = 10;
+
   addToQueue(track: Track): boolean {
+    if (this.queue$.value.length >= this.MAX_TRACKS) {
+      this.toastService.showNegativeToast(
+        `Crate is full (max ${this.MAX_TRACKS} tracks)`
+      );
+      return false;
+    }
+
     if (this.isInQueue(track.id)) {
       this.toastService.showInfoToast('Track already in your crate');
       return false;
@@ -57,26 +66,45 @@ export class DownloadQueueService {
 
     const queuedTrack: QueuedTrack = {
       track,
-      addedAt: new Date()
+      addedAt: new Date(),
     };
 
     const currentQueue = this.queue$.value;
     this.queue$.next([...currentQueue, queuedTrack]);
     this.saveToStorage();
-    
-    this.toastService.showPositiveToast(`Added "${track.title}" to your crate`);
+
+    const remaining = this.MAX_TRACKS - this.queue$.value.length;
+    if (remaining <= 3 && remaining > 0) {
+      this.toastService.showPositiveToast(
+        `Added "${track.title}" (${remaining} slots left)`
+      );
+    } else {
+      this.toastService.showPositiveToast(
+        `Added "${track.title}" to your crate`
+      );
+    }
     return true;
   }
 
   addMultipleToQueue(tracks: Track[]): number {
     let addedCount = 0;
     const currentQueue = [...this.queue$.value];
+    const availableSlots = this.MAX_TRACKS - currentQueue.length;
 
-    tracks.forEach(track => {
-      if (!this.isInQueue(track.id)) {
+    if (availableSlots <= 0) {
+      this.toastService.showNegativeToast(
+        `Crate is full (max ${this.MAX_TRACKS} tracks)`
+      );
+      return 0;
+    }
+
+    const tracksToAdd = tracks.slice(0, availableSlots);
+
+    tracksToAdd.forEach((track) => {
+      if (!this.isInQueue(track.id) && currentQueue.length < this.MAX_TRACKS) {
         currentQueue.push({
           track,
-          addedAt: new Date()
+          addedAt: new Date(),
         });
         addedCount++;
       }
@@ -85,7 +113,9 @@ export class DownloadQueueService {
     if (addedCount > 0) {
       this.queue$.next(currentQueue);
       this.saveToStorage();
-      this.toastService.showPositiveToast(`Added ${addedCount} tracks to your crate`);
+      this.toastService.showPositiveToast(
+        `Added ${addedCount} tracks to your crate`
+      );
     }
 
     return addedCount;
@@ -93,13 +123,15 @@ export class DownloadQueueService {
 
   removeFromQueue(trackId: number): void {
     const currentQueue = this.queue$.value;
-    const track = currentQueue.find(item => item.track.id === trackId);
-    
-    this.queue$.next(currentQueue.filter(item => item.track.id !== trackId));
+    const track = currentQueue.find((item) => item.track.id === trackId);
+
+    this.queue$.next(currentQueue.filter((item) => item.track.id !== trackId));
     this.saveToStorage();
 
     if (track) {
-      this.toastService.showInfoToast(`Removed "${track.track.title}" from crate`);
+      this.toastService.showInfoToast(
+        `Removed "${track.track.title}" from crate`
+      );
     }
   }
 
@@ -142,9 +174,9 @@ export class DownloadQueueService {
 
   private saveToStorage(): void {
     try {
-      const data = this.queue$.value.map(item => ({
+      const data = this.queue$.value.map((item) => ({
         track: item.track,
-        addedAt: item.addedAt.toISOString()
+        addedAt: item.addedAt.toISOString(),
       }));
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
@@ -159,7 +191,7 @@ export class DownloadQueueService {
         const data = JSON.parse(stored);
         const queue: QueuedTrack[] = data.map((item: any) => ({
           track: item.track,
-          addedAt: new Date(item.addedAt)
+          addedAt: new Date(item.addedAt),
         }));
         this.queue$.next(queue);
       }
@@ -171,7 +203,10 @@ export class DownloadQueueService {
   // ==================== Utilities ====================
 
   getTotalDuration(): number {
-    return this.queue$.value.reduce((total, item) => total + item.track.duration, 0);
+    return this.queue$.value.reduce(
+      (total, item) => total + item.track.duration,
+      0
+    );
   }
 
   formatTotalDuration(): string {
@@ -179,7 +214,7 @@ export class DownloadQueueService {
     const totalSeconds = Math.floor(totalMs / 1000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }

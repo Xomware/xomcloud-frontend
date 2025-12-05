@@ -7,14 +7,20 @@
         My Crate
       </h1>
       <p class="crate-summary" *ngIf="queue.length > 0">
-        {{ queue.length }} track{{ queue.length !== 1 ? "s" : "" }} •
-        {{ getTotalDuration() }}
+        {{ queue.length }}/10 tracks • {{ getTotalDuration() }}
+      </p>
+      <p class="crate-limit-warning" *ngIf="queue.length >= 10">
+        ⚠️ Crate is full (max 10 tracks)
       </p>
     </div>
 
     <div class="header-actions" *ngIf="queue.length > 0 && !isProcessing">
       <button class="clear-btn" (click)="clearQueue()">Clear All</button>
-      <button class="download-btn" (click)="startDownload()">
+      <button
+        class="download-btn"
+        (click)="startDownload()"
+        [disabled]="queue.length === 0"
+      >
         <svg viewBox="0 0 24 24" width="20" height="20">
           <path
             fill="currentColor"

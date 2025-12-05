@@ -11,8 +11,13 @@ export const environment = {
   apiBaseUrl: 'https://api.soundcloud.com',
   authBaseUrl: 'https://secure.soundcloud.com',
   get xomcloudApiUrl(): string {
-    return this.apiId === '---'
-      ? ''
+    return this.apiId === '---' 
+      ? '' 
       : `https://${this.apiId}.execute-api.us-east-1.amazonaws.com/dev`;
   },
+  get downloadApiUrl(): string {
+    return this.apiId === '---'
+      ? ''
+      : `https://${this.apiId}.execute-api.us-east-1.amazonaws.com/dev/download`;
+  }
 };
