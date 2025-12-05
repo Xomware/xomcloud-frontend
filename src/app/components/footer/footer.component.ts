@@ -6,23 +6,23 @@ import { filter } from 'rxjs/operators';
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
-  styleUrls: ['./footer.component.scss']
+  styleUrls: ['./footer.component.scss'],
 })
 export class FooterComponent implements OnInit {
   showDynamicButton = false;
   footerButtonText = '';
-  githubRepoUrl = 'https://github.com/domgiordano/xomcloud';
+  githubRepoUrl = 'https://github.com/domgiordano/xomcloud-frontend';
   currentRoute = '';
 
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
-      this.currentRoute = event.urlAfterRedirects;
-      this.updateDynamicButton();
-    });
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.currentRoute = event.urlAfterRedirects;
+        this.updateDynamicButton();
+      });
   }
 
   private updateDynamicButton(): void {

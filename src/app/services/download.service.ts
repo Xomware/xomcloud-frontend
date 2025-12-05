@@ -7,7 +7,6 @@ import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
 import { DownloadQueueService } from './download-queue.service';
 import { environment } from 'src/environments/environment';
-import { UserService } from './user.service';
 
 export interface DownloadProgress {
   phase:
@@ -64,7 +63,6 @@ export class DownloadService {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-    private userService: UserService,
     private toastService: ToastService,
     private queueService: DownloadQueueService
   ) {}
@@ -109,31 +107,50 @@ export class DownloadService {
   }
 
   // ==================== Progress Simulation ====================
-  // Since we can't get real-time progress from Lambda, we simulate it
+  // Since we can't get real-time progress from Lambda, we estimate based on total duration
 
-  private startProgressSimulation(total: number): void {
+  private startProgressSimulation(tracks: Track[]): void {
     this.stopProgressSimulation();
 
-    let simulated = 0;
-    const estimatedTimePerTrack = 8000; // ~8 seconds per track
-    const updateInterval = 500; // Update every 500ms
-    const incrementPerUpdate =
-      100 / ((total * estimatedTimePerTrack) / updateInterval);
+    // Calculate total duration in milliseconds
+    const totalDurationMs = tracks.reduce(
+      (sum, t) => sum + (t.duration || 180000),
+      0
+    );
+
+    // Estimate processing time: ~1 second per 30 seconds of audio, minimum 10s, max 5 min
+    const estimatedProcessingMs = Math.max(
+      10000,
+      Math.min(totalDurationMs / 30, 300000)
+    );
+
+    const updateInterval = 200; // Update every 200ms for smooth animation
+    const totalUpdates = estimatedProcessingMs / updateInterval;
+    const incrementPerUpdate = 99 / totalUpdates; // Cap at 99%
+
+    let currentProgress = 0;
+
+    this.progress$.next({
+      phase: 'processing',
+      message: 'Downloading tracks...',
+      currentTrack: '',
+      current: 0,
+      total: tracks.length,
+      percentage: 0,
+    });
 
     this.progressInterval = setInterval(() => {
-      simulated = Math.min(simulated + incrementPerUpdate, 95); // Cap at 95%
+      currentProgress = Math.min(currentProgress + incrementPerUpdate, 99);
 
-      const currentTrack = Math.min(
-        Math.ceil((simulated / 100) * total),
-        total
-      );
-      this.setProgress(
-        'processing',
-        `Processing track ${currentTrack} of ${total}...`,
-        '',
-        currentTrack,
-        total
-      );
+      this.progress$.next({
+        phase: 'processing',
+        message:
+          currentProgress >= 99 ? 'Almost done...' : 'Downloading tracks...',
+        currentTrack: '',
+        current: 0,
+        total: tracks.length,
+        percentage: Math.round(currentProgress),
+      });
     }, updateInterval);
   }
 
@@ -190,14 +207,14 @@ export class DownloadService {
         tracks.length
       );
 
-      // Start progress simulation
-      this.startProgressSimulation(tracks.length);
+      // Start progress simulation based on track durations
+      this.startProgressSimulation(tracks);
 
       // Call Lambda
       const response = await this.http
         .post<DownloadResponse>(
           downloadUrl,
-          { tracks: payload, username: this.userService.getUsername() },
+          { tracks: payload },
           { headers: this.authService.getXomcloudHeaders() }
         )
         .toPromise();
@@ -288,7 +305,6 @@ export class DownloadService {
                 artist: track.user?.username || 'Unknown Artist',
               },
             ],
-            username: this.userService.getUsername(),
           },
           { headers: this.authService.getXomcloudHeaders() }
         )
