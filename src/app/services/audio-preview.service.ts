@@ -141,7 +141,7 @@ export class AudioPreviewService {
   /**
    * Fetch the actual MP3 stream URL from SoundCloud API
    * Step 1: GET /tracks/:id/streams returns URLs like http_mp3_128_url
-   * Step 2: GET that URL with auth - returns 302 redirect to CloudFront
+   * Step 2: Fetch that URL with auth header, capture the 302 redirect Location
    */
   private async fetchStreamUrl(trackId: number): Promise<string | null> {
     const streamsUrl = `${environment.apiBaseUrl}/tracks/${trackId}/streams`;
@@ -154,7 +154,6 @@ export class AudioPreviewService {
         })
         .toPromise();
 
-      // Get the MP3 URL (still requires auth)
       const mp3Url = streams?.http_mp3_128_url;
 
       if (!mp3Url) {
@@ -164,21 +163,40 @@ export class AudioPreviewService {
 
       console.log('Got mp3Url:', mp3Url);
 
-      // Step 2: Call that URL - browser will follow 302 redirect
-      // The redirect goes to CloudFront which returns the actual audio
-      // We can just return the mp3Url and let the Audio element follow the redirect
-      // But we need to append the auth token as query param since Audio can't set headers
+      // Step 2: Fetch with redirect:manual to get the Location header
       const token = this.authService.getAccessToken();
-      const authUrl =
-        mp3Url + (mp3Url.includes('?') ? '&' : '?') + `oauth_token=${token}`;
+      const response = await fetch(mp3Url, {
+        method: 'GET',
+        headers: {
+          Authorization: `OAuth ${token}`,
+        },
+        redirect: 'manual', // Don't follow redirect, we want the Location header
+      });
 
-      return authUrl;
+      // The 302 response has the CloudFront URL in Location header
+      const cloudFrontUrl = response.headers.get('Location');
+
+      if (cloudFrontUrl) {
+        console.log(
+          'Got CloudFront URL:',
+          cloudFrontUrl.substring(0, 80) + '...'
+        );
+        return cloudFrontUrl;
+      }
+
+      // If redirect was followed automatically, response.url has the final URL
+      if (response.url && response.url !== mp3Url) {
+        console.log(
+          'Got redirected URL:',
+          response.url.substring(0, 80) + '...'
+        );
+        return response.url;
+      }
+
+      console.error('Could not get redirect URL');
+      return null;
     } catch (error: any) {
-      console.error(
-        'Failed to fetch stream URL:',
-        error.status,
-        error.statusText
-      );
+      console.error('Failed to fetch stream URL:', error);
       return null;
     }
   }
