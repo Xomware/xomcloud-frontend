@@ -163,37 +163,23 @@ export class AudioPreviewService {
 
       console.log('Got mp3Url:', mp3Url);
 
-      // Step 2: Fetch with redirect:manual to get the Location header
+      // Step 2: Fetch and follow redirect - response.url will be the final CloudFront URL
       const token = this.authService.getAccessToken();
       const response = await fetch(mp3Url, {
         method: 'GET',
         headers: {
           Authorization: `OAuth ${token}`,
         },
-        redirect: 'manual', // Don't follow redirect, we want the Location header
+        redirect: 'follow',
       });
 
-      // The 302 response has the CloudFront URL in Location header
-      const cloudFrontUrl = response.headers.get('Location');
-
-      if (cloudFrontUrl) {
-        console.log(
-          'Got CloudFront URL:',
-          cloudFrontUrl.substring(0, 80) + '...'
-        );
-        return cloudFrontUrl;
-      }
-
-      // If redirect was followed automatically, response.url has the final URL
-      if (response.url && response.url !== mp3Url) {
-        console.log(
-          'Got redirected URL:',
-          response.url.substring(0, 80) + '...'
-        );
+      // response.url is the final URL after redirects
+      if (response.ok && response.url) {
+        console.log('Got final URL:', response.url.substring(0, 80) + '...');
         return response.url;
       }
 
-      console.error('Could not get redirect URL');
+      console.error('Fetch failed:', response.status, response.statusText);
       return null;
     } catch (error: any) {
       console.error('Failed to fetch stream URL:', error);
