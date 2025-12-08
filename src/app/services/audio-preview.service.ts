@@ -141,7 +141,7 @@ export class AudioPreviewService {
   /**
    * Fetch the actual MP3 stream URL from SoundCloud API
    * Step 1: GET /tracks/:id/streams returns URLs like http_mp3_128_url
-   * Step 2: GET that URL with auth header to get the actual CloudFront MP3 URL
+   * Step 2: GET that URL with auth - returns 302 redirect to CloudFront
    */
   private async fetchStreamUrl(trackId: number): Promise<string | null> {
     const streamsUrl = `${environment.apiBaseUrl}/tracks/${trackId}/streams`;
@@ -155,22 +155,24 @@ export class AudioPreviewService {
         .toPromise();
 
       // Get the MP3 URL (still requires auth)
-      const mp3Url = streams?.http_mp3_128_url || streams?.hls_mp3_128_url;
+      const mp3Url = streams?.http_mp3_128_url;
 
       if (!mp3Url) {
         console.error('No stream URL in response');
         return null;
       }
 
-      // Step 2: Call that URL with auth to get the actual CloudFront URL
-      const streamResponse = await this.http
-        .get<any>(mp3Url, {
-          headers: this.authService.getAuthHeaders(),
-        })
-        .toPromise();
+      console.log('Got mp3Url:', mp3Url);
 
-      // This should return the actual playable URL
-      return streamResponse?.url || null;
+      // Step 2: Call that URL - browser will follow 302 redirect
+      // The redirect goes to CloudFront which returns the actual audio
+      // We can just return the mp3Url and let the Audio element follow the redirect
+      // But we need to append the auth token as query param since Audio can't set headers
+      const token = this.authService.getAccessToken();
+      const authUrl =
+        mp3Url + (mp3Url.includes('?') ? '&' : '?') + `oauth_token=${token}`;
+
+      return authUrl;
     } catch (error: any) {
       console.error(
         'Failed to fetch stream URL:',
