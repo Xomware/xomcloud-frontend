@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
 import { DownloadQueueService } from './download-queue.service';
 import { environment } from 'src/environments/environment';
+import { UserService } from './user.service';
 
 export interface DownloadProgress {
   phase:
@@ -63,6 +64,7 @@ export class DownloadService {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
+    private userService: UserService,
     private toastService: ToastService,
     private queueService: DownloadQueueService
   ) {}
@@ -214,7 +216,7 @@ export class DownloadService {
       const response = await this.http
         .post<DownloadResponse>(
           downloadUrl,
-          { tracks: payload },
+          { tracks: payload, username: this.userService.getUsername() },
           { headers: this.authService.getXomcloudHeaders() }
         )
         .toPromise();
@@ -305,6 +307,7 @@ export class DownloadService {
                 artist: track.user?.username || 'Unknown Artist',
               },
             ],
+            username: this.userService.getUsername(),
           },
           { headers: this.authService.getXomcloudHeaders() }
         )
