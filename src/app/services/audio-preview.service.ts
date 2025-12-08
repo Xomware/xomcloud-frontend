@@ -140,20 +140,37 @@ export class AudioPreviewService {
 
   /**
    * Fetch the actual MP3 stream URL from SoundCloud API
-   * Per docs: GET /tracks/:id/streams returns { http_mp3_128_url: "..." }
+   * Step 1: GET /tracks/:id/streams returns URLs like http_mp3_128_url
+   * Step 2: GET that URL with auth header to get the actual CloudFront MP3 URL
    */
   private async fetchStreamUrl(trackId: number): Promise<string | null> {
-    const url = `${environment.apiBaseUrl}/tracks/${trackId}/streams`;
+    const streamsUrl = `${environment.apiBaseUrl}/tracks/${trackId}/streams`;
 
     try {
-      const response = await this.http
-        .get<any>(url, {
+      // Step 1: Get the streams object
+      const streams = await this.http
+        .get<any>(streamsUrl, {
           headers: this.authService.getAuthHeaders(),
         })
         .toPromise();
 
-      // The response contains pre-signed URLs for different formats
-      return response?.http_mp3_128_url || response?.hls_mp3_128_url || null;
+      // Get the MP3 URL (still requires auth)
+      const mp3Url = streams?.http_mp3_128_url || streams?.hls_mp3_128_url;
+
+      if (!mp3Url) {
+        console.error('No stream URL in response');
+        return null;
+      }
+
+      // Step 2: Call that URL with auth to get the actual CloudFront URL
+      const streamResponse = await this.http
+        .get<any>(mp3Url, {
+          headers: this.authService.getAuthHeaders(),
+        })
+        .toPromise();
+
+      // This should return the actual playable URL
+      return streamResponse?.url || null;
     } catch (error: any) {
       console.error(
         'Failed to fetch stream URL:',
