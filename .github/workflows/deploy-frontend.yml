@@ -60,3 +60,12 @@ jobs:
           AWS_REGION: "us-east-1"
         run: |
           aws s3 sync ./dist/xomcloud s3://xomcloud.com --delete
+
+      - name: Make index.html non-cacheable
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
+        run: |
+          aws s3 cp ./dist/xomcloud/index.html s3://xomcloud.com/index.html \
+            --cache-control "no-cache, no-store, must-revalidate"
