@@ -1,11 +1,15 @@
-# XOMCLOUD 🎵
+# Xomcloud
 
 Your SoundCloud Experience, Elevated.
 
-- [FE Rep0](https://github.com/domgiordano/xomcloud-frontend)
-- [BE Repo](https://github.com/domgiordano/xomcloud-backend)
-- [Infra Repo](https://github.com/domgiordano/xomcloud-infrastructure)
-- [Terraform Workspace](https://app.terraform.io/app/Domjgiordano/workspaces/xomcloud-infrastructure)
+## Xomware Ecosystem
+
+| App | URL | Frontend | Backend | Infrastructure |
+|-----|-----|----------|---------|----------------|
+| **Xomware** (Hub) | [xomware.com](https://xomware.com) | [xomware-frontend](https://github.com/domgiordano/xomware-frontend) | - | [xomware-infrastructure](https://github.com/domgiordano/xomware-infrastructure) |
+| **Xomify** | [xomify.xomware.com](https://xomify.xomware.com) | [xomify-frontend](https://github.com/domgiordano/xomify-frontend) | [xomify-backend](https://github.com/domgiordano/xomify-backend) | [xomify-infrastructure](https://github.com/domgiordano/xomify-infrastructure) |
+| **Xomcloud** | [xomcloud.xomware.com](https://xomcloud.xomware.com) | [xomcloud-frontend](https://github.com/domgiordano/xomcloud-frontend) | [xomcloud-backend](https://github.com/domgiordano/xomcloud-backend) | [xomcloud-infrastructure](https://github.com/domgiordano/xomcloud-infrastructure) |
+| **Xomper** | [xomper.xomware.com](https://xomper.xomware.com) | [xomper-front-end](https://github.com/domgiordano/xomper-front-end) | [xomper-back-end](https://github.com/domgiordano/xomper-back-end) | [xomper-infrastructure](https://github.com/domgiordano/xomper-infrastructure) |
 
 ## Overview
 
@@ -22,7 +26,7 @@ XOMCLOUD is an Angular application that integrates with the SoundCloud API to pr
 
 ## Tech Stack
 
-- **Frontend**: Angular 17+
+- **Frontend**: Angular 16
 - **Styling**: SCSS with custom design system
 - **Authentication**: OAuth 2.1 with PKCE
 - **API**: SoundCloud API v2
@@ -41,8 +45,8 @@ XOMCLOUD is an Angular application that integrates with the SoundCloud API to pr
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/domgiordano/xomcloud.git
-   cd xomcloud
+   git clone https://github.com/domgiordano/xomcloud-frontend.git
+   cd xomcloud-frontend
    ```
 
 2. **Install dependencies**
