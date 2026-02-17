@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       skip_cache_invalidation:
-        description: 'Skip CloudFront cache invalidation'
+        description: "Skip CloudFront cache invalidation"
         required: false
-        default: 'false'
+        default: "false"
 
 jobs:
   build:
@@ -54,7 +54,7 @@ jobs:
           # Set production flag
           sed -i "s|production: false|production: true|g" src/environments/environment.ts
           # Update callback URL for production
-          sed -i "s|baseCallbackUrl: 'http://localhost:4200'|baseCallbackUrl: 'https://xomcloud.com'|g" src/environments/environment.ts
+          sed -i "s|baseCallbackUrl: 'http://localhost:4200'|baseCallbackUrl: 'https://xomcloud.xomware.com'|g" src/environments/environment.ts
 
       - name: Build the project
         run: npm run build -- --configuration production
@@ -65,7 +65,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-east-1"
         run: |
-          aws s3 sync ./dist/xomcloud s3://xomcloud.com --delete
+          aws s3 sync ./dist/xomcloud s3://xomcloud.xomware.com --delete
 
       - name: Make index.html non-cacheable
         env:
@@ -73,5 +73,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-east-1"
         run: |
-          aws s3 cp ./dist/xomcloud/index.html s3://xomcloud.com/index.html \
+          aws s3 cp ./dist/xomcloud/index.html s3://xomcloud.xomware.com/index.html \
             --cache-control "no-cache, no-store, must-revalidate"
