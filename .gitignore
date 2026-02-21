@@ -42,4 +42,4 @@ testem.log
 Thumbs.db
 # Testing
 src/environments/environment.local.ts
-.vscode
+.vscodesrc/environments/environment.ts
