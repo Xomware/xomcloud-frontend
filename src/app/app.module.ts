@@ -1,7 +1,7 @@
 // app.module.ts
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -41,51 +41,45 @@ import { DownloadService } from './services/download.service';
 // Interceptors
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    // Components
-    ToolbarComponent,
-    FooterComponent,
-    LoaderComponent,
-    ToastComponent,
-    CallbackComponent,
-    // Pages
-    HomeComponent,
-    MyProfileComponent,
-    UserProfileComponent,
-    LikedTracksComponent,
-    UserTracksComponent,
-    PlaylistsComponent,
-    PlaylistDetailComponent,
-    UserPlaylistsComponent,
-    FollowersComponent,
-    FollowingComponent,
-    SearchComponent,
-    MyCrateComponent,
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    BrowserAnimationsModule,
-    FormsModule,
-    ReactiveFormsModule,
-  ],
-  providers: [
-    AuthService,
-    ToastService,
-    UserService,
-    TrackService,
-    PlaylistService,
-    DownloadQueueService,
-    DownloadService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true,
-    },
-  ],
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        // Components
+        ToolbarComponent,
+        FooterComponent,
+        LoaderComponent,
+        ToastComponent,
+        CallbackComponent,
+        // Pages
+        HomeComponent,
+        MyProfileComponent,
+        UserProfileComponent,
+        LikedTracksComponent,
+        UserTracksComponent,
+        PlaylistsComponent,
+        PlaylistDetailComponent,
+        UserPlaylistsComponent,
+        FollowersComponent,
+        FollowingComponent,
+        SearchComponent,
+        MyCrateComponent,
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        FormsModule,
+        ReactiveFormsModule], providers: [
+        AuthService,
+        ToastService,
+        UserService,
+        TrackService,
+        PlaylistService,
+        DownloadQueueService,
+        DownloadService,
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true,
+        },
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
 export class AppModule {}
