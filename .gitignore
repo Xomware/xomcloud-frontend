@@ -43,3 +43,11 @@ Thumbs.db
 # Testing
 src/environments/environment.local.ts
 .vscodesrc/environments/environment.ts
+
+# Claude Code session memory (personal, not shared)
+.claude/memory/
+# Claude setup backups
+.claude/.backups/
+# Personal Claude overrides (not shared)
+CLAUDE.local.md
+.claude/settings.local.json
