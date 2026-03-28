@@ -1,7 +1,9 @@
 // toast.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { trigger, state, style, animate, transition } from '@angular/animations';
-import { ToastService } from 'src/app/services/toast.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { Toast, ToastService } from 'src/app/services/toast.service';
 
 @Component({
   selector: 'app-toast',
@@ -9,26 +11,28 @@ import { ToastService } from 'src/app/services/toast.service';
   styleUrls: ['./toast.component.scss'],
   animations: [
     trigger('slideIn', [
-      state('void', style({ 
-        transform: 'translateY(100%)', 
-        opacity: 0 
+      state('void', style({
+        transform: 'translateY(100%)',
+        opacity: 0
       })),
       transition(':enter', [
-        animate('300ms ease-out', style({ 
-          transform: 'translateY(0)', 
-          opacity: 1 
+        animate('300ms ease-out', style({
+          transform: 'translateY(0)',
+          opacity: 1
         }))
       ]),
       transition(':leave', [
-        animate('300ms ease-in', style({ 
-          transform: 'translateY(100%)', 
-          opacity: 0 
+        animate('300ms ease-in', style({
+          transform: 'translateY(100%)',
+          opacity: 0
         }))
       ]),
     ]),
   ],
 })
-export class ToastComponent implements OnInit {
+export class ToastComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   toastType: 'positive' | 'negative' | 'info' = 'positive';
   message = '';
   isVisible = false;
@@ -36,16 +40,22 @@ export class ToastComponent implements OnInit {
   constructor(private toastService: ToastService) {}
 
   ngOnInit(): void {
-    this.toastService.registerToast(this);
+    this.toastService.getToast$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((toast: Toast | null) => {
+        if (toast) {
+          this.toastType = toast.type;
+          this.message = toast.message;
+          this.isVisible = true;
+        } else {
+          this.isVisible = false;
+          this.message = '';
+        }
+      });
   }
 
-  showToast(msg: string): void {
-    this.message = msg;
-    this.isVisible = true;
-
-    setTimeout(() => {
-      this.isVisible = false;
-      this.message = '';
-    }, 3500);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

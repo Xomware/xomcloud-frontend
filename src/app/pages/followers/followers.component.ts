@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { User } from '../../models';
 import { UserService, ToastService } from '../../services';
+import { formatNumber, onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-followers',
@@ -62,8 +63,7 @@ export class FollowersComponent implements OnInit, OnDestroy {
         next: (followers) => {
           this.followers = followers;
         },
-        error: (err) => {
-          console.error('Failed to load followers:', err);
+        error: () => {
           this.error = 'Failed to load followers. Please try again.';
           this.toastService.showNegativeToast('Failed to load followers');
         },
@@ -71,7 +71,6 @@ export class FollowersComponent implements OnInit, OnDestroy {
   }
 
   goToProfile(user: User): void {
-    // Navigate to a user profile view
     this.router.navigate(['/user-profile'], {
       queryParams: { id: user.id, username: user.username },
     });
@@ -83,14 +82,10 @@ export class FollowersComponent implements OnInit, OnDestroy {
   }
 
   formatNumber(num: number): string {
-    if (!num) return '0';
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
+    return formatNumber(num);
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) target.src = fallbackSrc;
+    onImageError(event, fallbackSrc);
   }
 }

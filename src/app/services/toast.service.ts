@@ -1,4 +1,4 @@
-// toast.service.ts - Notification service
+// toast.service.ts - Notification service using Observable pattern
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -13,14 +13,9 @@ export interface Toast {
 })
 export class ToastService {
   private toast$ = new BehaviorSubject<Toast | null>(null);
-  private toastComponent: any = null;
 
   getToast$(): Observable<Toast | null> {
     return this.toast$.asObservable();
-  }
-
-  registerToast(component: any): void {
-    this.toastComponent = component;
   }
 
   showPositiveToast(message: string, duration: number = 3000): void {
@@ -39,12 +34,6 @@ export class ToastService {
     const toast: Toast = { message, type, duration };
     this.toast$.next(toast);
 
-    if (this.toastComponent) {
-      this.toastComponent.toastType = type;
-      this.toastComponent.showToast(message);
-    }
-
-    // Auto-clear after duration
     setTimeout(() => {
       this.toast$.next(null);
     }, duration);

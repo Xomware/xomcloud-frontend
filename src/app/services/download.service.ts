@@ -1,7 +1,7 @@
 // download.service.ts - Uses Lambda Function URL for downloads (no timeout limit)
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { Track } from '../models';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
@@ -58,8 +58,7 @@ export class DownloadService {
     percentage: 0,
   });
 
-  // Simulated progress for long-running downloads
-  private progressInterval: any = null;
+  private progressInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private http: HttpClient,
@@ -109,26 +108,23 @@ export class DownloadService {
   }
 
   // ==================== Progress Simulation ====================
-  // Since we can't get real-time progress from Lambda, we estimate based on total duration
 
   private startProgressSimulation(tracks: Track[]): void {
     this.stopProgressSimulation();
 
-    // Calculate total duration in milliseconds
     const totalDurationMs = tracks.reduce(
       (sum, t) => sum + (t.duration || 180000),
       0
     );
 
-    // Estimate processing time: ~1 second per 240 seconds of audio (8x original), minimum 2s, max 40s
     const estimatedProcessingMs = Math.max(
       2000,
       Math.min(totalDurationMs / 240, 40000)
     );
 
-    const updateInterval = 200; // Update every 200ms for smooth animation
+    const updateInterval = 200;
     const totalUpdates = estimatedProcessingMs / updateInterval;
-    const incrementPerUpdate = 99 / totalUpdates; // Cap at 99%
+    const incrementPerUpdate = 99 / totalUpdates;
 
     let currentProgress = 0;
 
@@ -193,7 +189,6 @@ export class DownloadService {
         tracks.length
       );
 
-      // Build request payload
       const payload = tracks.map((track) => ({
         id: track.id,
         url: track.permalink_url,
@@ -209,17 +204,15 @@ export class DownloadService {
         tracks.length
       );
 
-      // Start progress simulation based on track durations
       this.startProgressSimulation(tracks);
 
-      // Call Lambda
-      const response = await this.http
-        .post<DownloadResponse>(
+      const response = await firstValueFrom(
+        this.http.post<DownloadResponse>(
           downloadUrl,
           { tracks: payload, username: this.userService.getUsername() },
           { headers: this.authService.getXomcloudHeaders() }
         )
-        .toPromise();
+      );
 
       this.stopProgressSimulation();
 
@@ -237,10 +230,8 @@ export class DownloadService {
         data.total
       );
 
-      // Open the presigned S3 URL to download the zip
       window.open(data.download_url, '_blank');
 
-      // Show result message
       if (data.failed_count > 0) {
         this.toastService.showInfoToast(
           `Downloaded ${data.successful}/${data.total} tracks. ${data.failed_count} failed.`
@@ -253,9 +244,8 @@ export class DownloadService {
 
       setTimeout(() => this.resetProgress(), 4000);
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.stopProgressSimulation();
-      console.error('Download failed:', error);
 
       const errorMessage = this.getErrorMessage(error);
       this.setProgress('error', errorMessage, '', 0, 0);
@@ -268,7 +258,6 @@ export class DownloadService {
     }
   }
 
-  // Legacy method - redirects to downloadSelected
   async downloadQueue(): Promise<boolean> {
     const queue = this.queueService.getQueue();
     const tracks = queue.slice(0, 5).map((q) => q.track);
@@ -281,7 +270,6 @@ export class DownloadService {
     const downloadUrl = environment.downloadApiUrl;
 
     if (!downloadUrl) {
-      // Fallback: try to open SoundCloud page
       if (track.permalink_url) {
         window.open(track.permalink_url, '_blank');
       } else {
@@ -295,8 +283,8 @@ export class DownloadService {
     );
 
     try {
-      const response = await this.http
-        .post<DownloadResponse>(
+      const response = await firstValueFrom(
+        this.http.post<DownloadResponse>(
           downloadUrl,
           {
             tracks: [
@@ -311,7 +299,7 @@ export class DownloadService {
           },
           { headers: this.authService.getXomcloudHeaders() }
         )
-        .toPromise();
+      );
 
       if (response?.data?.download_url) {
         window.open(response.data.download_url, '_blank');
@@ -319,15 +307,14 @@ export class DownloadService {
       } else {
         throw new Error('No download URL received');
       }
-    } catch (error: any) {
-      console.error('Single track download failed:', error);
+    } catch (error: unknown) {
       this.toastService.showNegativeToast(this.getErrorMessage(error));
     }
   }
 
   // ==================== Error Handling ====================
 
-  private getErrorMessage(error: any): string {
+  private getErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       if (error.status === 0) {
         return 'Network error. Please check your connection.';
@@ -338,13 +325,14 @@ export class DownloadService {
       if (error.status === 401 || error.status === 403) {
         return 'Authentication failed. Please log in again.';
       }
-      if (error.error?.error?.message) {
-        return error.error.error.message;
+      const serverMessage = error.error?.error?.message;
+      if (typeof serverMessage === 'string') {
+        return serverMessage;
       }
       return `Server error (${error.status}). Please try again.`;
     }
 
-    if (error?.message) {
+    if (error instanceof Error && error.message) {
       return error.message;
     }
 

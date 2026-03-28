@@ -1,12 +1,18 @@
 // download-queue.service.ts - Manages the download staging area ("My Crate")
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Track } from '../models';
 import { ToastService } from './toast.service';
 
 export interface QueuedTrack {
   track: Track;
   addedAt: Date;
+}
+
+interface StoredQueueItem {
+  track: Track;
+  addedAt: string;
 }
 
 @Injectable({
@@ -36,11 +42,7 @@ export class DownloadQueueService {
   }
 
   getQueueCount$(): Observable<number> {
-    return new Observable((observer) => {
-      this.queue$.subscribe((queue) => {
-        observer.next(queue.length);
-      });
-    });
+    return this.queue$.pipe(map(queue => queue.length));
   }
 
   isInQueue(trackId: number): boolean {
@@ -151,8 +153,8 @@ export class DownloadQueueService {
         addedAt: item.addedAt.toISOString(),
       }));
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
-      console.error('Failed to save queue to storage:', error);
+    } catch {
+      // Storage quota exceeded or unavailable - silently fail
     }
   }
 
@@ -160,15 +162,15 @@ export class DownloadQueueService {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        const data = JSON.parse(stored);
-        const queue: QueuedTrack[] = data.map((item: any) => ({
+        const data: StoredQueueItem[] = JSON.parse(stored);
+        const queue: QueuedTrack[] = data.map((item) => ({
           track: item.track,
           addedAt: new Date(item.addedAt),
         }));
         this.queue$.next(queue);
       }
-    } catch (error) {
-      console.error('Failed to load queue from storage:', error);
+    } catch {
+      // Corrupt storage data - silently fail
     }
   }
 

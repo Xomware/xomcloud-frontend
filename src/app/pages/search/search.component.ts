@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Track } from '../../models';
 import { TrackService, ToastService, DownloadQueueService } from '../../services';
+import { formatNumber, onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-search',
@@ -13,7 +14,7 @@ import { TrackService, ToastService, DownloadQueueService } from '../../services
 export class SearchComponent implements OnDestroy {
   private destroy$ = new Subject<void>();
   private searchSubject$ = new Subject<string>();
-  
+
   searchQuery = '';
   tracks: Track[] = [];
   loading = false;
@@ -25,7 +26,6 @@ export class SearchComponent implements OnDestroy {
     private toastService: ToastService,
     private queueService: DownloadQueueService
   ) {
-    // Setup debounced search
     this.searchSubject$.pipe(
       debounceTime(400),
       distinctUntilChanged(),
@@ -41,8 +41,6 @@ export class SearchComponent implements OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
-  // ==================== Search ====================
 
   onSearchInput(): void {
     this.searchSubject$.next(this.searchQuery);
@@ -71,8 +69,7 @@ export class SearchComponent implements OnDestroy {
             this.toastService.showInfoToast('No tracks found for your search');
           }
         },
-        error: (err) => {
-          console.error('Search failed:', err);
+        error: () => {
           this.error = 'Search failed. Please try again.';
           this.toastService.showNegativeToast('Search failed');
         }
@@ -86,8 +83,6 @@ export class SearchComponent implements OnDestroy {
     this.error = null;
   }
 
-  // ==================== Queue Actions ====================
-
   addToQueue(track: Track): void {
     this.queueService.addToQueue(track);
   }
@@ -95,8 +90,6 @@ export class SearchComponent implements OnDestroy {
   isInQueue(trackId: number): boolean {
     return this.queueService.isInQueue(trackId);
   }
-
-  // ==================== Utilities ====================
 
   getArtworkUrl(track: Track): string {
     return this.trackService.getArtworkUrl(track, 't300x300');
@@ -107,19 +100,10 @@ export class SearchComponent implements OnDestroy {
   }
 
   formatPlayCount(count: number): string {
-    if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + 'M';
-    }
-    if (count >= 1000) {
-      return (count / 1000).toFixed(1) + 'K';
-    }
-    return count.toString();
+    return formatNumber(count);
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-      target.src = fallbackSrc;
-    }
+    onImageError(event, fallbackSrc);
   }
 }

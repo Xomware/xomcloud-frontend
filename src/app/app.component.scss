@@ -1,24 +1,12 @@
-// Global app style
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background-color: #0a0a14;
-  color: #ffffff;
-  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+// App shell styles - global layout only
+// Base styles are in src/styles.scss
 
 .app-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
 .content {
@@ -26,54 +14,25 @@ body {
   overflow-y: auto;
 }
 
-// Global Typography
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-a {
-  color: #ff6b35;
-  text-decoration: none;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: #f7931e;
-  }
-}
-
-// Button Reset
-button {
-  font-family: inherit;
-  cursor: pointer;
-}
-
-// Scrollbar Styling
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 53, 0.5);
-  border-radius: 4px;
-
-  &:hover {
-    background: rgba(255, 107, 53, 0.7);
-  }
-}
-
-// Selection
-::selection {
-  background: rgba(255, 107, 53, 0.3);
+// Skip to content link for accessibility
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff6b35;
   color: #fff;
+  padding: 12px 24px;
+  border-radius: 0 0 8px 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  z-index: 10001;
+  transition: top 0.2s ease;
+
+  &:focus {
+    top: 0;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
 }

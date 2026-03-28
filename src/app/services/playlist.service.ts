@@ -11,6 +11,16 @@ import {
   UpdatePlaylistRequest,
 } from '../models';
 import { AuthService } from './auth.service';
+import { getPlaylistArtworkUrl } from '../utils/shared.utils';
+
+interface LikedPlaylistItem {
+  playlist: Playlist;
+}
+
+interface LikedPlaylistResponse {
+  collection: LikedPlaylistItem[];
+  next_href?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -18,7 +28,6 @@ import { AuthService } from './auth.service';
 export class PlaylistService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
 
-  // Cache for user playlists
   private userPlaylists$ = new BehaviorSubject<Playlist[]>([]);
   private likedPlaylists$ = new BehaviorSubject<Playlist[]>([]);
 
@@ -43,10 +52,8 @@ export class PlaylistService {
         map((response) => response.collection),
         tap((playlists) => {
           this.userPlaylists$.next(playlists);
-          console.log(`Loaded ${playlists.length} user playlists`);
         }),
         catchError((error) => {
-          console.error('Failed to fetch user playlists:', error);
           return throwError(() => error);
         })
       );
@@ -60,7 +67,7 @@ export class PlaylistService {
 
   getLikedPlaylists(limit: number = 50): Observable<Playlist[]> {
     return this.http
-      .get<{ collection: { playlist: Playlist }[] }>(
+      .get<LikedPlaylistResponse>(
         `${this.apiBaseUrl}/me/likes/playlists`,
         {
           headers: this.authService.getAuthHeaders(),
@@ -72,7 +79,6 @@ export class PlaylistService {
       )
       .pipe(
         map((response) => {
-          // Filter out any null/undefined playlists
           return response.collection
             .filter((item) => item && item.playlist)
             .map((item) => item.playlist);
@@ -81,7 +87,6 @@ export class PlaylistService {
           this.likedPlaylists$.next(playlists);
         }),
         catchError((error) => {
-          console.error('Failed to fetch liked playlists:', error);
           return throwError(() => error);
         })
       );
@@ -106,7 +111,6 @@ export class PlaylistService {
       })
       .pipe(
         catchError((error) => {
-          console.error(`Failed to fetch playlist ${playlistId}:`, error);
           return throwError(() => error);
         })
       );
@@ -135,13 +139,10 @@ export class PlaylistService {
       })
       .pipe(
         tap((playlist) => {
-          console.log(`Created playlist: ${playlist.title}`);
-          // Update cache
           const current = this.userPlaylists$.value;
           this.userPlaylists$.next([playlist, ...current]);
         }),
         catchError((error) => {
-          console.error('Failed to create playlist:', error);
           return throwError(() => error);
         })
       );
@@ -161,8 +162,6 @@ export class PlaylistService {
       })
       .pipe(
         tap((playlist) => {
-          console.log(`Updated playlist: ${playlist.title}`);
-          // Update cache
           const current = this.userPlaylists$.value;
           const index = current.findIndex((p) => p.id === playlistId);
           if (index !== -1) {
@@ -171,26 +170,22 @@ export class PlaylistService {
           }
         }),
         catchError((error) => {
-          console.error(`Failed to update playlist ${playlistId}:`, error);
           return throwError(() => error);
         })
       );
   }
 
-  deletePlaylist(playlistId: number): Observable<any> {
+  deletePlaylist(playlistId: number): Observable<void> {
     return this.http
-      .delete(`${this.apiBaseUrl}/playlists/${playlistId}`, {
+      .delete<void>(`${this.apiBaseUrl}/playlists/${playlistId}`, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
         tap(() => {
-          console.log(`Deleted playlist ${playlistId}`);
-          // Update cache
           const current = this.userPlaylists$.value;
           this.userPlaylists$.next(current.filter((p) => p.id !== playlistId));
         }),
         catchError((error) => {
-          console.error(`Failed to delete playlist ${playlistId}:`, error);
           return throwError(() => error);
         })
       );
@@ -219,7 +214,6 @@ export class PlaylistService {
         );
       }),
       catchError((error) => {
-        console.error(`Failed to add tracks to playlist ${playlistId}:`, error);
         return throwError(() => error);
       })
     );
@@ -247,10 +241,6 @@ export class PlaylistService {
         );
       }),
       catchError((error) => {
-        console.error(
-          `Failed to remove track from playlist ${playlistId}:`,
-          error
-        );
         return throwError(() => error);
       })
     );
@@ -258,29 +248,25 @@ export class PlaylistService {
 
   // ==================== Playlist Actions ====================
 
-  likePlaylist(playlistId: number): Observable<any> {
+  likePlaylist(playlistId: number): Observable<void> {
     return this.http
-      .post(`${this.apiBaseUrl}/likes/playlists/${playlistId}`, null, {
+      .post<void>(`${this.apiBaseUrl}/likes/playlists/${playlistId}`, null, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
-        tap(() => console.log(`Liked playlist ${playlistId}`)),
         catchError((error) => {
-          console.error(`Failed to like playlist ${playlistId}:`, error);
           return throwError(() => error);
         })
       );
   }
 
-  unlikePlaylist(playlistId: number): Observable<any> {
+  unlikePlaylist(playlistId: number): Observable<void> {
     return this.http
-      .delete(`${this.apiBaseUrl}/likes/playlists/${playlistId}`, {
+      .delete<void>(`${this.apiBaseUrl}/likes/playlists/${playlistId}`, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
-        tap(() => console.log(`Unliked playlist ${playlistId}`)),
         catchError((error) => {
-          console.error(`Failed to unlike playlist ${playlistId}:`, error);
           return throwError(() => error);
         })
       );
@@ -298,43 +284,7 @@ export class PlaylistService {
       | 't300x300'
       | 't67x67' = 'large'
   ): string {
-    if (!playlist) {
-      return 'assets/img/default-artwork.png';
-    }
-
-    let url = playlist.artwork_url;
-
-    // If no artwork, try first track's artwork
-    if (
-      !url &&
-      playlist.tracks?.length > 0 &&
-      playlist.tracks[0]?.artwork_url
-    ) {
-      url = playlist.tracks[0].artwork_url;
-    }
-
-    // Final fallback to user avatar
-    if (!url) {
-      return (
-        playlist.user?.avatar_url?.replace('large', size) ||
-        'assets/img/default-artwork.png'
-      );
-    }
-
-    // Handle different SoundCloud URL formats
-    url = url.replace('-large', `-${size}`);
-    url = url.replace('-t500x500', `-${size}`);
-    url = url.replace('-crop', `-${size}`);
-    url = url.replace('-t300x300', `-${size}`);
-    url = url.replace('-t67x67', `-${size}`);
-    url = url.replace('-badge', `-${size}`);
-
-    // If no size parameter found, try simple replacement
-    if (!url.includes(`-${size}`)) {
-      url = url.replace('large', size);
-    }
-
-    return url;
+    return getPlaylistArtworkUrl(playlist, size);
   }
 
   getTotalDuration(playlist: Playlist): string {

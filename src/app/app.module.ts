@@ -14,6 +14,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { LoaderComponent } from './components/loader/loader.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { CallbackComponent } from './components/callback/callback.component';
+import { AmbientBackgroundComponent } from './components/ambient-background/ambient-background.component';
 
 // Pages
 import { HomeComponent } from './pages/home/home.component';
@@ -29,15 +30,6 @@ import { FollowingComponent } from './pages/following/following.component';
 import { SearchComponent } from './pages/search/search.component';
 import { MyCrateComponent } from './pages/my-crate/my-crate.component';
 
-// Services
-import { AuthService } from './services/auth.service';
-import { ToastService } from './services/toast.service';
-import { UserService } from './services/user.service';
-import { TrackService } from './services/track.service';
-import { PlaylistService } from './services/playlist.service';
-import { DownloadQueueService } from './services/download-queue.service';
-import { DownloadService } from './services/download.service';
-
 // Interceptors
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 
@@ -49,6 +41,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
         LoaderComponent,
         ToastComponent,
         CallbackComponent,
+        AmbientBackgroundComponent,
         // Pages
         HomeComponent,
         MyProfileComponent,
@@ -68,13 +61,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
         BrowserAnimationsModule,
         FormsModule,
         ReactiveFormsModule], providers: [
-        AuthService,
-        ToastService,
-        UserService,
-        TrackService,
-        PlaylistService,
-        DownloadQueueService,
-        DownloadService,
+        // Services use providedIn: 'root' - no need to register here
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,

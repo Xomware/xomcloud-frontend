@@ -4,8 +4,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { User } from '../models';
+import { User, Playlist } from '../models';
 import { AuthService } from './auth.service';
+
+interface CollectionResponse<T> {
+  collection: T[];
+  next_href?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -36,10 +41,8 @@ export class UserService {
       .pipe(
         tap((user) => {
           this.currentUser$.next(user);
-          console.log('User profile loaded:', user.username);
         }),
         catchError((error) => {
-          console.error('Failed to fetch user profile:', error);
           return throwError(() => error);
         })
       );
@@ -69,7 +72,6 @@ export class UserService {
       })
       .pipe(
         catchError((error) => {
-          console.error(`Failed to fetch user ${userId}:`, error);
           return throwError(() => error);
         })
       );
@@ -77,16 +79,12 @@ export class UserService {
 
   getUserByPermalink(permalink: string): Observable<User> {
     return this.http
-      .get<any>(`${this.apiBaseUrl}/resolve`, {
+      .get<User>(`${this.apiBaseUrl}/resolve`, {
         headers: this.authService.getAuthHeaders(),
         params: { url: `https://soundcloud.com/${permalink}` },
       })
       .pipe(
         catchError((error) => {
-          console.error(
-            `Failed to resolve user permalink ${permalink}:`,
-            error
-          );
           return throwError(() => error);
         })
       );
@@ -102,7 +100,7 @@ export class UserService {
     }
 
     return this.http
-      .get<{ collection: User[] }>(
+      .get<CollectionResponse<User>>(
         `${this.apiBaseUrl}/users/${id}/followings`,
         {
           headers: this.authService.getAuthHeaders(),
@@ -115,7 +113,6 @@ export class UserService {
       .pipe(
         map((response) => response.collection),
         catchError((error) => {
-          console.error('Failed to fetch followings:', error);
           return throwError(() => error);
         })
       );
@@ -129,7 +126,7 @@ export class UserService {
     }
 
     return this.http
-      .get<{ collection: User[] }>(`${this.apiBaseUrl}/users/${id}/followers`, {
+      .get<CollectionResponse<User>>(`${this.apiBaseUrl}/users/${id}/followers`, {
         headers: this.authService.getAuthHeaders(),
         params: {
           limit: limit.toString(),
@@ -139,35 +136,30 @@ export class UserService {
       .pipe(
         map((response) => response.collection),
         catchError((error) => {
-          console.error('Failed to fetch followers:', error);
           return throwError(() => error);
         })
       );
   }
 
-  followUser(userId: number): Observable<any> {
+  followUser(userId: number): Observable<void> {
     return this.http
-      .put(`${this.apiBaseUrl}/me/followings/${userId}`, null, {
+      .put<void>(`${this.apiBaseUrl}/me/followings/${userId}`, null, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
-        tap(() => console.log(`Now following user ${userId}`)),
         catchError((error) => {
-          console.error(`Failed to follow user ${userId}:`, error);
           return throwError(() => error);
         })
       );
   }
 
-  unfollowUser(userId: number): Observable<any> {
+  unfollowUser(userId: number): Observable<void> {
     return this.http
-      .delete(`${this.apiBaseUrl}/me/followings/${userId}`, {
+      .delete<void>(`${this.apiBaseUrl}/me/followings/${userId}`, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
-        tap(() => console.log(`Unfollowed user ${userId}`)),
         catchError((error) => {
-          console.error(`Failed to unfollow user ${userId}:`, error);
           return throwError(() => error);
         })
       );
@@ -175,9 +167,9 @@ export class UserService {
 
   // ==================== User Stats ====================
 
-  getUserPlaylists(userId: number, limit: number = 50): Observable<any[]> {
+  getUserPlaylists(userId: number, limit: number = 50): Observable<Playlist[]> {
     return this.http
-      .get<{ collection: any[] }>(
+      .get<CollectionResponse<Playlist>>(
         `${this.apiBaseUrl}/users/${userId}/playlists`,
         {
           headers: this.authService.getAuthHeaders(),
@@ -190,7 +182,6 @@ export class UserService {
       .pipe(
         map((response) => response.collection || []),
         catchError((error) => {
-          console.error(`Failed to fetch playlists for user ${userId}:`, error);
           return throwError(() => error);
         })
       );

@@ -13,6 +13,7 @@ import { DownloadQueueService } from '../../services/download-queue.service';
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private resizeHandler = this.checkIfMobile.bind(this);
 
   dropdownVisible = false;
   isMobile = false;
@@ -28,12 +29,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    window.addEventListener('resize', this.checkIfMobile.bind(this));
-    
-    // Check initial route
+    window.addEventListener('resize', this.resizeHandler);
+
     this.checkHiddenPage();
-    
-    // Listen for route changes
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       takeUntil(this.destroy$)
@@ -42,7 +41,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
       this.dropdownVisible = false;
     });
 
-    // Subscribe to queue count
     this.queueService.getQueue$()
       .pipe(takeUntil(this.destroy$))
       .subscribe(queue => {
@@ -51,13 +49,13 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener('resize', this.resizeHandler);
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   private checkHiddenPage(): void {
     const url = this.router.url;
-    // Hide toolbar on home page (login) and callback
     this.isHiddenPage = url === '/home' || url === '/' || url.includes('callback');
   }
 
@@ -95,7 +93,6 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   onLogoError(event: Event): void {
-    // If logo image fails to load, hide it (text fallback could be shown via CSS)
     const img = event.target as HTMLImageElement;
     if (img) {
       img.style.display = 'none';

@@ -3,8 +3,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Track } from '../../models';
-import { 
-  DownloadQueueService, 
+import {
+  DownloadQueueService,
   QueuedTrack,
   DownloadService,
   DownloadProgress,
@@ -12,6 +12,7 @@ import {
   ToastService,
   AudioPreviewService
 } from '../../services';
+import { onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-my-crate',
@@ -20,17 +21,17 @@ import {
 })
 export class MyCrateComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   queue: QueuedTrack[] = [];
   selectedTrackIds: Set<number> = new Set();
   isProcessing = false;
-  downloadProgress: DownloadProgress = { 
-    phase: 'idle', 
-    message: '', 
+  downloadProgress: DownloadProgress = {
+    phase: 'idle',
+    message: '',
     currentTrack: '',
-    current: 0, 
+    current: 0,
     total: 0,
-    percentage: 0 
+    percentage: 0
   };
 
   readonly MAX_DOWNLOAD = 5;
@@ -48,7 +49,6 @@ export class MyCrateComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(queue => {
         this.queue = queue;
-        // Clean up selections for removed tracks
         const queueIds = new Set(queue.map(q => q.track.id));
         this.selectedTrackIds.forEach(id => {
           if (!queueIds.has(id)) {
@@ -75,8 +75,6 @@ export class MyCrateComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ==================== Selection ====================
-
   isSelected(trackId: number): boolean {
     return this.selectedTrackIds.has(trackId);
   }
@@ -100,10 +98,8 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   selectAll(): void {
     if (this.selectedTrackIds.size === Math.min(this.queue.length, this.MAX_DOWNLOAD)) {
-      // Deselect all
       this.selectedTrackIds.clear();
     } else {
-      // Select up to MAX_DOWNLOAD
       this.selectedTrackIds.clear();
       this.queue.slice(0, this.MAX_DOWNLOAD).forEach(item => {
         this.selectedTrackIds.add(item.track.id);
@@ -115,8 +111,6 @@ export class MyCrateComponent implements OnInit, OnDestroy {
     return this.selectedTrackIds.size;
   }
 
-  // ==================== Queue Actions ====================
-
   removeFromQueue(trackId: number): void {
     this.queueService.removeFromQueue(trackId);
     this.selectedTrackIds.delete(trackId);
@@ -124,7 +118,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   removeSelected(): void {
     if (this.selectedTrackIds.size === 0) return;
-    
+
     this.selectedTrackIds.forEach(id => {
       this.queueService.removeFromQueue(id);
     });
@@ -133,33 +127,28 @@ export class MyCrateComponent implements OnInit, OnDestroy {
 
   clearQueue(): void {
     if (this.queue.length === 0) return;
-    
+
     if (confirm('Are you sure you want to clear your entire crate?')) {
       this.queueService.clearQueue();
       this.selectedTrackIds.clear();
     }
   }
 
-  // ==================== Download ====================
-
   async downloadSelected(): Promise<void> {
     if (this.selectedTrackIds.size === 0) {
       this.toastService.showInfoToast('Select tracks to download (max 5)');
       return;
     }
-    
+
     if (this.isProcessing) return;
 
-    // Get selected tracks
     const selectedTracks = this.queue
       .filter(item => this.selectedTrackIds.has(item.track.id))
       .map(item => item.track);
 
-    // Download selected
     const success = await this.downloadService.downloadSelected(selectedTracks);
-    
+
     if (success) {
-      // Remove downloaded tracks from queue
       selectedTracks.forEach(track => {
         this.queueService.removeFromQueue(track.id);
       });
@@ -170,8 +159,6 @@ export class MyCrateComponent implements OnInit, OnDestroy {
   downloadSingleTrack(track: Track): void {
     this.downloadService.downloadSingleTrack(track);
   }
-
-  // ==================== Utilities ====================
 
   getArtworkUrl(track: Track): string {
     return this.trackService.getArtworkUrl(track, 't67x67');
@@ -189,7 +176,7 @@ export class MyCrateComponent implements OnInit, OnDestroy {
     const selectedMs = this.queue
       .filter(item => this.selectedTrackIds.has(item.track.id))
       .reduce((sum, item) => sum + item.track.duration, 0);
-    
+
     const minutes = Math.floor(selectedMs / 60000);
     if (minutes >= 60) {
       return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
@@ -198,24 +185,18 @@ export class MyCrateComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-      target.src = fallbackSrc;
-    }
+    onImageError(event, fallbackSrc);
   }
 
   isDownloading(): boolean {
-    return this.downloadProgress.phase !== 'idle' && 
-           this.downloadProgress.phase !== 'complete' && 
+    return this.downloadProgress.phase !== 'idle' &&
+           this.downloadProgress.phase !== 'complete' &&
            this.downloadProgress.phase !== 'error';
   }
 
-  // Check if track is long (>8 min)
   isLongTrack(track: Track): boolean {
     return track.duration > 8 * 60 * 1000;
   }
-
-  // ==================== Audio Preview ====================
 
   togglePlay(track: Track): void {
     this.audioPreview.toggle(track);

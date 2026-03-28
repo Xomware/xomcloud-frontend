@@ -41,7 +41,7 @@ export interface Subscription {
 export interface Visuals {
   enabled: boolean;
   visuals: Visual[];
-  tracking: any;
+  tracking: unknown;
 }
 
 export interface Visual {

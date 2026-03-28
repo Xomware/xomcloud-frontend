@@ -1,0 +1,75 @@
+// _variables.scss - XomCloud design tokens
+
+// Brand Colors
+$color-primary: #ff6b35;
+$color-secondary: #f7931e;
+$color-accent: #e94e77;
+
+// Background Colors
+$color-bg-dark: #0a0a14;
+$color-bg-surface: #121225;
+$color-bg-surface-alt: #1a1a35;
+$color-bg-card: rgba(255, 255, 255, 0.05);
+$color-bg-card-end: rgba(255, 255, 255, 0.02);
+
+// Toolbar / Footer
+$color-bg-toolbar: #1a1a2e;
+$color-bg-toolbar-end: #16213e;
+
+// Text Colors
+$color-text-primary: #ffffff;
+$color-text-secondary: #b0b0c0;
+$color-text-muted: #8a8a9a;
+$color-text-dim: #6a6a7a;
+
+// Status Colors
+$color-success: #22c55e;
+$color-error: #ef4444;
+$color-warning: #fbbf24;
+$color-info: $color-primary;
+
+// Border Colors
+$color-border-subtle: rgba(255, 255, 255, 0.1);
+$color-border-light: rgba(255, 255, 255, 0.15);
+$color-border-primary: rgba(255, 107, 53, 0.3);
+
+// Gradients
+$gradient-primary: linear-gradient(135deg, $color-primary 0%, $color-secondary 100%);
+$gradient-bg: linear-gradient(180deg, $color-bg-dark 0%, $color-bg-surface 100%);
+$gradient-toolbar: linear-gradient(135deg, $color-bg-toolbar 0%, $color-bg-toolbar-end 100%);
+$gradient-card: linear-gradient(135deg, $color-bg-card 0%, $color-bg-card-end 100%);
+
+// Shadows
+$shadow-primary: 0 4px 15px rgba(255, 107, 53, 0.3);
+$shadow-primary-lg: 0 8px 24px rgba(255, 107, 53, 0.4);
+$shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.4);
+$shadow-toolbar: 0 2px 20px rgba(0, 0, 0, 0.3);
+
+// Typography
+$font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+
+// Border Radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-pill: 25px;
+$radius-full: 50%;
+
+// Transitions
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;
+
+// Breakpoints
+$breakpoint-sm: 480px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1200px;
+
+// Z-index layers
+$z-background: 0;
+$z-content: 1;
+$z-toolbar: 1000;
+$z-dropdown: 1001;
+$z-toast: 10000;
+$z-loader: 9999;

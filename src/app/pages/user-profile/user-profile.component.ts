@@ -4,13 +4,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { User, Track, Playlist } from '../../models';
-import { 
-  UserService, 
-  TrackService, 
-  PlaylistService, 
+import {
+  UserService,
+  TrackService,
+  PlaylistService,
   ToastService,
-  DownloadQueueService 
+  DownloadQueueService
 } from '../../services';
+import { formatNumber, onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-user-profile',
@@ -19,18 +20,18 @@ import {
 })
 export class UserProfileComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   userId: number | null = null;
   user: User | null = null;
   recentTracks: Track[] = [];
   likedTracks: Track[] = [];
   playlists: Playlist[] = [];
-  
+
   loading = true;
   error: string | null = null;
   likesPrivate = false;
   bioExpanded = false;
-  
+
   stats = {
     tracks: 0,
     playlists: 0,
@@ -85,8 +86,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           this.updateStats(user);
           this.loadAdditionalData();
         },
-        error: (err) => {
-          console.error('Failed to load profile:', err);
+        error: () => {
           this.error = 'Failed to load profile. Please try again.';
           this.toastService.showNegativeToast('Failed to load profile');
         }
@@ -106,15 +106,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private loadAdditionalData(): void {
     if (!this.userId) return;
 
-    // Load user's tracks
     this.trackService.getUserTracks(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tracks) => this.recentTracks = tracks,
-        error: (err) => console.error('Failed to load tracks:', err)
       });
 
-    // Load user's liked tracks
     this.trackService.getUserLikedTracks(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -125,23 +122,18 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Failed to load liked tracks:', err);
           if (err.status === 403) {
             this.likesPrivate = true;
           }
         }
       });
 
-    // Load user's playlists
     this.userService.getUserPlaylists(this.userId, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (playlists) => this.playlists = playlists,
-        error: (err) => console.error('Failed to load playlists:', err)
       });
   }
-
-  // ==================== Crate Actions ====================
 
   addToQueue(track: Track): void {
     this.queueService.addToQueue(track);
@@ -151,36 +143,34 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     return this.queueService.isInQueue(trackId);
   }
 
-  // ==================== Navigation ====================
-
   goToTracks(): void {
     if (this.user) {
-      this.router.navigate(['/user-tracks'], { 
-        queryParams: { id: this.user.id, username: this.user.username } 
+      this.router.navigate(['/user-tracks'], {
+        queryParams: { id: this.user.id, username: this.user.username }
       });
     }
   }
 
   goToPlaylists(): void {
     if (this.user) {
-      this.router.navigate(['/user-playlists'], { 
-        queryParams: { id: this.user.id, username: this.user.username } 
+      this.router.navigate(['/user-playlists'], {
+        queryParams: { id: this.user.id, username: this.user.username }
       });
     }
   }
 
   goToFollowers(): void {
     if (this.user) {
-      this.router.navigate(['/followers'], { 
-        queryParams: { id: this.user.id, username: this.user.username } 
+      this.router.navigate(['/followers'], {
+        queryParams: { id: this.user.id, username: this.user.username }
       });
     }
   }
 
   goToFollowing(): void {
     if (this.user) {
-      this.router.navigate(['/following'], { 
-        queryParams: { id: this.user.id, username: this.user.username } 
+      this.router.navigate(['/following'], {
+        queryParams: { id: this.user.id, username: this.user.username }
       });
     }
   }
@@ -191,16 +181,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.toastService.showInfoToast('This user\'s likes are private');
         return;
       }
-      this.router.navigate(['/liked-tracks'], { 
-        queryParams: { id: this.user.id, username: this.user.username } 
+      this.router.navigate(['/liked-tracks'], {
+        queryParams: { id: this.user.id, username: this.user.username }
       });
     }
   }
 
-  // ==================== Utilities ====================
-
   getAvatarUrl(size: string = 'large'): string {
-    if (!this.user?.avatar_url) return 'assets/img/default-avatar.png';
+    if (!this.user?.avatar_url) return 'assets/img/default-avatar.svg';
     return this.user.avatar_url.replace('large', size);
   }
 
@@ -213,12 +201,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   formatNumber(num: number): string {
-    if (num === null || num === undefined || isNaN(num)) {
-      return '0';
-    }
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
+    return formatNumber(num);
   }
 
   getJoinDate(): string {
@@ -234,7 +217,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) target.src = fallbackSrc;
+    onImageError(event, fallbackSrc);
   }
 }

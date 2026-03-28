@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { User } from '../../models';
 import { UserService, ToastService } from '../../services';
+import { formatNumber, onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-following',
@@ -62,8 +63,7 @@ export class FollowingComponent implements OnInit, OnDestroy {
         next: (following) => {
           this.following = following;
         },
-        error: (err) => {
-          console.error('Failed to load following:', err);
+        error: () => {
           this.error = 'Failed to load following. Please try again.';
           this.toastService.showNegativeToast('Failed to load following');
         },
@@ -77,19 +77,15 @@ export class FollowingComponent implements OnInit, OnDestroy {
   }
 
   getAvatarUrl(user: User): string {
-    if (!user?.avatar_url) return 'assets/img/default-avatar.png';
+    if (!user?.avatar_url) return 'assets/img/default-avatar.svg';
     return user.avatar_url.replace('large', 't200x200');
   }
 
   formatNumber(num: number): string {
-    if (!num) return '0';
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
+    return formatNumber(num);
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) target.src = fallbackSrc;
+    onImageError(event, fallbackSrc);
   }
 }
