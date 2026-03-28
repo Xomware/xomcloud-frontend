@@ -1,4 +1,4 @@
-<div class="toolbar" [ngClass]="{'show-dropdown': dropdownVisible}" *ngIf="!isHiddenPage">
+<nav class="toolbar" [ngClass]="{'show-dropdown': dropdownVisible}" *ngIf="!isHiddenPage" role="navigation" aria-label="Main navigation">
   <a routerLink="/my-profile" class="app-title" *ngIf="isLoggedIn()">
     <img 
       src="assets/img/xomcloud-banner-transparent.png" 
@@ -29,14 +29,14 @@
   </div>
 
   <!-- Logout Button (Desktop) -->
-  <button class="logout-btn desktop-only" *ngIf="isLoggedIn()" (click)="logout()">
+  <button class="logout-btn desktop-only" *ngIf="isLoggedIn()" (click)="logout()" aria-label="Log out of XOMCLOUD">
     Logout
   </button>
 
   <!-- Dropdown Button (Mobile) -->
-  <div class="dropdown-button" *ngIf="isLoggedIn()" (click)="toggleDropdown()">
-    <span class="hamburger">☰</span>
-  </div>
+  <button class="dropdown-button" *ngIf="isLoggedIn()" (click)="toggleDropdown()" aria-label="Toggle navigation menu" [attr.aria-expanded]="dropdownVisible">
+    <span class="hamburger" aria-hidden="true">☰</span>
+  </button>
 
   <!-- Mobile Dropdown Menu -->
   <div class="dropdown" *ngIf="dropdownVisible">
@@ -50,4 +50,4 @@
     </a>
     <a class="logout-link" (click)="logout()">Logout</a>
   </div>
-</div>
+</nav>

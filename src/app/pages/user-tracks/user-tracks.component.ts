@@ -9,6 +9,7 @@ import {
   ToastService,
   DownloadQueueService,
 } from '../../services';
+import { formatNumber, onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-user-tracks',
@@ -66,8 +67,7 @@ export class UserTracksComponent implements OnInit, OnDestroy {
         next: (tracks) => {
           this.tracks = tracks;
         },
-        error: (err) => {
-          console.error('Failed to load tracks:', err);
+        error: () => {
           this.error = 'Failed to load tracks. Please try again.';
           this.toastService.showNegativeToast('Failed to load tracks');
         },
@@ -91,14 +91,10 @@ export class UserTracksComponent implements OnInit, OnDestroy {
   }
 
   formatPlayCount(count: number): string {
-    if (!count) return '0';
-    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
-    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
-    return count.toString();
+    return formatNumber(count);
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) target.src = fallbackSrc;
+    onImageError(event, fallbackSrc);
   }
 }

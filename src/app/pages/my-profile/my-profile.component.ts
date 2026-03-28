@@ -9,6 +9,7 @@ import {
   PlaylistService,
   ToastService,
 } from '../../services';
+import { formatNumber, onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-my-profile',
@@ -66,8 +67,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
           this.updateStats(user);
           this.loadAdditionalData();
         },
-        error: (err) => {
-          console.error('Failed to load profile:', err);
+        error: () => {
           this.error = 'Failed to load your profile. Please try again.';
           this.toastService.showNegativeToast('Failed to load profile');
         },
@@ -75,10 +75,6 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   private updateStats(user: User): void {
-    console.log('User likes data:', {
-      likes_count: user.likes_count,
-      public_favorites_count: user.public_favorites_count,
-    });
     this.stats = {
       tracks: user.track_count || 0,
       playlists: user.playlist_count || 0,
@@ -89,43 +85,30 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   private loadAdditionalData(): void {
-    // Load recent tracks
     this.trackService
       .getLikedTracks(6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tracks) => (this.recentTracks = tracks),
-        error: (err) => console.error('Failed to load recent tracks:', err),
       });
 
-    // Load playlists
     this.playlistService
       .getUserPlaylists(false, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (playlists) => (this.playlists = playlists),
-        error: (err) => console.error('Failed to load playlists:', err),
       });
   }
 
   getAvatarUrl(size: string = 'large'): string {
     if (!this.user?.avatar_url) {
-      return 'assets/img/default-avatar.png';
+      return 'assets/img/default-avatar.svg';
     }
     return this.user.avatar_url.replace('large', size);
   }
 
   formatNumber(num: number): string {
-    if (num === null || num === undefined || isNaN(num)) {
-      return '0';
-    }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toString();
+    return formatNumber(num);
   }
 
   getTrackArtwork(track: Track): string {
@@ -149,9 +132,6 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-      target.src = fallbackSrc;
-    }
+    onImageError(event, fallbackSrc);
   }
 }

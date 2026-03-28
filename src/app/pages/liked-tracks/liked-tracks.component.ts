@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Track } from '../../models';
 import { TrackService, ToastService, DownloadQueueService, UserService, AudioPreviewService } from '../../services';
+import { formatNumber, onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-liked-tracks',
@@ -13,24 +14,21 @@ import { TrackService, ToastService, DownloadQueueService, UserService, AudioPre
 })
 export class LikedTracksComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   tracks: Track[] = [];
   loading = true;
   loadingMore = false;
   error: string | null = null;
-  
-  // Pagination
+
   nextUrl: string | null = null;
   hasMore = false;
   pageSize = 50;
-  
-  // Viewing other user's likes
+
   userId: number | null = null;
   username: string | null = null;
   isOwnLikes = true;
   isPrivate = false;
-  
-  // Selection mode
+
   selectionMode = false;
   selectedTracks: Set<number> = new Set();
 
@@ -45,7 +43,6 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Check if viewing another user's likes
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['id']) {
         this.userId = +params['id'];
@@ -89,7 +86,6 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
         this.hasMore = result.hasMore;
       },
       error: (err) => {
-        console.error('Failed to load liked tracks:', err);
         if (err.status === 403) {
           this.isPrivate = true;
           this.toastService.showInfoToast('This user\'s likes are private');
@@ -103,9 +99,9 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
 
   loadMore(): void {
     if (!this.hasMore || this.loadingMore || !this.nextUrl) return;
-    
+
     this.loadingMore = true;
-    
+
     const request = this.isOwnLikes
       ? this.trackService.getLikedTracksPaginated(this.pageSize, this.nextUrl)
       : this.trackService.getUserLikedTracksPaginated(this.userId!, this.pageSize, this.nextUrl);
@@ -119,14 +115,11 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
         this.nextUrl = result.nextUrl;
         this.hasMore = result.hasMore;
       },
-      error: (err) => {
-        console.error('Failed to load more tracks:', err);
+      error: () => {
         this.toastService.showNegativeToast('Failed to load more tracks');
       }
     });
   }
-
-  // ==================== Selection ====================
 
   toggleSelectionMode(): void {
     this.selectionMode = !this.selectionMode;
@@ -155,8 +148,6 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
     this.selectedTracks.clear();
   }
 
-  // ==================== Queue Actions ====================
-
   addToQueue(track: Track): void {
     this.queueService.addToQueue(track);
   }
@@ -164,7 +155,7 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
   addSelectedToQueue(): void {
     const selectedTrackObjects = this.tracks.filter(t => this.selectedTracks.has(t.id));
     const added = this.queueService.addMultipleToQueue(selectedTrackObjects);
-    
+
     if (added > 0) {
       this.selectionMode = false;
       this.selectedTracks.clear();
@@ -175,8 +166,6 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
     return this.queueService.isInQueue(trackId);
   }
 
-  // ==================== Utilities ====================
-
   getArtworkUrl(track: Track): string {
     return this.trackService.getArtworkUrl(track, 't300x300');
   }
@@ -186,20 +175,11 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-      target.src = fallbackSrc;
-    }
+    onImageError(event, fallbackSrc);
   }
 
   formatPlayCount(count: number): string {
-    if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + 'M';
-    }
-    if (count >= 1000) {
-      return (count / 1000).toFixed(1) + 'K';
-    }
-    return count.toString();
+    return formatNumber(count);
   }
 
   getPageTitle(): string {
@@ -211,13 +191,11 @@ export class LikedTracksComponent implements OnInit, OnDestroy {
 
   goBackToProfile(): void {
     if (this.userId) {
-      this.router.navigate(['/user-profile'], { 
-        queryParams: { id: this.userId, username: this.username } 
+      this.router.navigate(['/user-profile'], {
+        queryParams: { id: this.userId, username: this.username }
       });
     }
   }
-
-  // ==================== Audio Preview ====================
 
   togglePlay(track: Track): void {
     this.audioPreview.toggle(track);

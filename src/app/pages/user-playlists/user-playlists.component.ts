@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Playlist } from '../../models';
 import { UserService, PlaylistService, ToastService, DownloadQueueService } from '../../services';
+import { onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-user-playlists',
@@ -13,7 +14,7 @@ import { UserService, PlaylistService, ToastService, DownloadQueueService } from
 })
 export class UserPlaylistsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   userId: number | null = null;
   username: string = '';
   playlists: Playlist[] = [];
@@ -63,8 +64,7 @@ export class UserPlaylistsComponent implements OnInit, OnDestroy {
         next: (playlists) => {
           this.playlists = playlists;
         },
-        error: (err) => {
-          console.error('Failed to load playlists:', err);
+        error: () => {
           this.error = 'Failed to load playlists. Please try again.';
           this.toastService.showNegativeToast('Failed to load playlists');
         }
@@ -77,8 +77,8 @@ export class UserPlaylistsComponent implements OnInit, OnDestroy {
 
   goBackToProfile(): void {
     if (this.userId) {
-      this.router.navigate(['/user-profile'], { 
-        queryParams: { id: this.userId, username: this.username } 
+      this.router.navigate(['/user-profile'], {
+        queryParams: { id: this.userId, username: this.username }
       });
     } else {
       this.router.navigate(['/my-profile']);
@@ -111,7 +111,6 @@ export class UserPlaylistsComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) target.src = fallbackSrc;
+    onImageError(event, fallbackSrc);
   }
 }

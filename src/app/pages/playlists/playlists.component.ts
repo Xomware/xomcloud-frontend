@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Playlist, Track } from '../../models';
 import { PlaylistService, TrackService, ToastService, DownloadQueueService } from '../../services';
+import { onImageError } from '../../utils/shared.utils';
 
 @Component({
   selector: 'app-playlists',
@@ -13,7 +14,7 @@ import { PlaylistService, TrackService, ToastService, DownloadQueueService } fro
 })
 export class PlaylistsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   playlists: Playlist[] = [];
   likedPlaylists: Playlist[] = [];
   loading = true;
@@ -52,8 +53,7 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
           this.playlists = playlists;
           this.loadLikedPlaylists();
         },
-        error: (err) => {
-          console.error('Failed to load playlists:', err);
+        error: () => {
           this.error = 'Failed to load your playlists. Please try again.';
           this.toastService.showNegativeToast('Failed to load playlists');
         }
@@ -67,11 +67,8 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
         next: (playlists) => {
           this.likedPlaylists = playlists;
         },
-        error: (err) => console.error('Failed to load liked playlists:', err)
       });
   }
-
-  // ==================== Tab Navigation ====================
 
   setActiveTab(tab: 'my' | 'liked'): void {
     this.activeTab = tab;
@@ -81,13 +78,9 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     return this.activeTab === 'my' ? this.playlists : this.likedPlaylists;
   }
 
-  // ==================== Navigation ====================
-
   goToPlaylist(playlist: Playlist): void {
     this.router.navigate(['/playlist'], { queryParams: { id: playlist.id } });
   }
-
-  // ==================== Queue Actions ====================
 
   addPlaylistToQueue(playlist: Playlist): void {
     if (!playlist.tracks || playlist.tracks.length === 0) {
@@ -110,8 +103,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
     return this.queueService.isInQueue(trackId);
   }
 
-  // ==================== Utilities ====================
-
   getArtworkUrl(playlist: Playlist): string {
     return this.playlistService.getArtworkUrl(playlist, 't300x300');
   }
@@ -129,9 +120,6 @@ export class PlaylistsComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event, fallbackSrc: string): void {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-      target.src = fallbackSrc;
-    }
+    onImageError(event, fallbackSrc);
   }
 }

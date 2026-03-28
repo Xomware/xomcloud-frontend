@@ -26,9 +26,9 @@
           <p class="playlist-meta">
             <span
               class="creator"
-              (click)="goToArtist(playlist.user?.id, playlist.user?.username)"
+              (click)="goToArtist(playlist.user.id, playlist.user.username)"
             >
-              {{ playlist.user?.username }}
+              {{ playlist.user.username }}
             </span>
             <span class="separator">•</span>
             <span>{{ tracks.length }} tracks</span>

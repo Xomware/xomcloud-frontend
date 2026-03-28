@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap, switchMap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { AuthToken, PKCEChallenge } from '../models';
@@ -14,14 +14,13 @@ import { DownloadQueueService } from './download-queue.service';
 })
 export class AuthService {
   private readonly clientId = environment.soundcloudClientId;
-  private readonly clientSecret = environment.soundcloudClientSecret;
   private readonly redirectUri = `${environment.baseCallbackUrl}/callback`;
   private readonly authBaseUrl = environment.authBaseUrl;
-  
+
   private accessToken$ = new BehaviorSubject<string | null>(null);
   private refreshToken$ = new BehaviorSubject<string | null>(null);
   private tokenExpiry$ = new BehaviorSubject<Date | null>(null);
-  
+
   private readonly STORAGE_KEYS = {
     ACCESS_TOKEN: 'sc_access_token',
     REFRESH_TOKEN: 'sc_refresh_token',
@@ -40,12 +39,12 @@ export class AuthService {
   }
 
   // ==================== PKCE Generation ====================
-  
+
   private async generatePKCEChallenge(): Promise<PKCEChallenge> {
     const codeVerifier = this.generateRandomString(128);
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
     const state = this.generateRandomString(32);
-    
+
     return { codeVerifier, codeChallenge, state };
   }
 
@@ -78,7 +77,7 @@ export class AuthService {
 
   async login(): Promise<void> {
     const pkce = await this.generatePKCEChallenge();
-    
+
     // Store PKCE verifier and state for callback validation
     sessionStorage.setItem(this.STORAGE_KEYS.PKCE_VERIFIER, pkce.codeVerifier);
     sessionStorage.setItem(this.STORAGE_KEYS.PKCE_STATE, pkce.state);
@@ -101,7 +100,6 @@ export class AuthService {
     const error = urlParams.get('error');
 
     if (error) {
-      console.error('OAuth error:', error);
       this.toastService.showNegativeToast('Authentication failed. Please try again.');
       this.router.navigate(['/home']);
       return;
@@ -110,7 +108,6 @@ export class AuthService {
     // Validate state parameter
     const storedState = sessionStorage.getItem(this.STORAGE_KEYS.PKCE_STATE);
     if (!state || state !== storedState) {
-      console.error('State mismatch - possible CSRF attack');
       this.toastService.showNegativeToast('Security validation failed. Please try again.');
       this.router.navigate(['/home']);
       return;
@@ -126,19 +123,20 @@ export class AuthService {
 
   private exchangeCodeForToken(code: string): void {
     const codeVerifier = sessionStorage.getItem(this.STORAGE_KEYS.PKCE_VERIFIER);
-    
+
     if (!codeVerifier) {
-      console.error('No PKCE verifier found');
       this.toastService.showNegativeToast('Authentication session expired. Please try again.');
       this.router.navigate(['/home']);
       return;
     }
 
+    // NOTE: Token exchange should go through backend to keep client_secret secure.
+    // For now, send to SoundCloud directly with PKCE only (no client_secret).
+    // TODO: Move to backend endpoint at environment.tokenExchangeUrl
     const tokenUrl = `${this.authBaseUrl}/oauth/token`;
     const body = new URLSearchParams();
     body.set('grant_type', 'authorization_code');
     body.set('client_id', this.clientId);
-    body.set('client_secret', this.clientSecret);
     body.set('redirect_uri', this.redirectUri);
     body.set('code_verifier', codeVerifier);
     body.set('code', code);
@@ -152,11 +150,9 @@ export class AuthService {
       next: (response) => {
         this.storeTokens(response);
         this.cleanupPKCE();
-        console.log('Authentication successful');
         this.router.navigate(['/my-profile']);
       },
-      error: (err) => {
-        console.error('Token exchange failed:', err);
+      error: () => {
         this.toastService.showNegativeToast('Login failed. Please try again.');
         this.cleanupPKCE();
         this.router.navigate(['/home']);
@@ -168,7 +164,7 @@ export class AuthService {
 
   private storeTokens(token: AuthToken): void {
     const expiry = new Date(Date.now() + token.expires_in * 1000);
-    
+
     this.accessToken$.next(token.access_token);
     this.refreshToken$.next(token.refresh_token);
     this.tokenExpiry$.next(expiry);
@@ -185,7 +181,7 @@ export class AuthService {
 
     if (accessToken && refreshToken && tokenExpiry) {
       const expiry = new Date(tokenExpiry);
-      
+
       if (expiry > new Date()) {
         this.accessToken$.next(accessToken);
         this.refreshToken$.next(refreshToken);
@@ -198,16 +194,17 @@ export class AuthService {
 
   refreshAccessToken(): Observable<AuthToken> {
     const refreshToken = this.refreshToken$.value;
-    
+
     if (!refreshToken) {
       return throwError(() => new Error('No refresh token available'));
     }
 
+    // NOTE: Token refresh should also go through backend.
+    // TODO: Move to backend endpoint at environment.tokenExchangeUrl
     const tokenUrl = `${this.authBaseUrl}/oauth/token`;
     const body = new URLSearchParams();
     body.set('grant_type', 'refresh_token');
     body.set('client_id', this.clientId);
-    body.set('client_secret', this.clientSecret);
     body.set('refresh_token', refreshToken);
 
     const headers = new HttpHeaders({
@@ -218,10 +215,8 @@ export class AuthService {
     return this.http.post<AuthToken>(tokenUrl, body.toString(), { headers }).pipe(
       tap((response) => {
         this.storeTokens(response);
-        console.log('Token refreshed successfully');
       }),
       catchError((error) => {
-        console.error('Token refresh failed:', error);
         this.logout();
         return throwError(() => error);
       })
@@ -231,7 +226,6 @@ export class AuthService {
   private attemptTokenRefresh(): void {
     this.refreshAccessToken().subscribe({
       error: () => {
-        // Refresh failed, clear tokens
         this.clearTokens();
       }
     });
@@ -246,7 +240,7 @@ export class AuthService {
     this.accessToken$.next(null);
     this.refreshToken$.next(null);
     this.tokenExpiry$.next(null);
-    
+
     localStorage.removeItem(this.STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(this.STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(this.STORAGE_KEYS.TOKEN_EXPIRY);
@@ -256,17 +250,13 @@ export class AuthService {
 
   logout(): void {
     const accessToken = this.accessToken$.value;
-    
+
     if (accessToken) {
-      // Call SoundCloud sign-out endpoint
-      this.http.post(`${this.authBaseUrl}/sign-out`, { access_token: accessToken }).subscribe({
-        complete: () => console.log('Signed out from SoundCloud'),
-        error: (err) => console.warn('Sign-out request failed:', err)
-      });
+      this.http.post(`${this.authBaseUrl}/sign-out`, { access_token: accessToken }).subscribe();
     }
 
     this.clearTokens();
-    this.queueService.clearQueueSilent(); // Clear the download queue
+    this.queueService.clearQueueSilent();
     this.router.navigate(['/home']);
   }
 
@@ -281,10 +271,9 @@ export class AuthService {
   isLoggedIn(): boolean {
     const token = this.accessToken$.value;
     const expiry = this.tokenExpiry$.value;
-    
+
     if (!token || !expiry) return false;
-    
-    // Check if token will expire in the next minute
+
     const expiryBuffer = new Date(Date.now() + 60000);
     return expiry > expiryBuffer;
   }
@@ -292,13 +281,11 @@ export class AuthService {
   isTokenExpiringSoon(): boolean {
     const expiry = this.tokenExpiry$.value;
     if (!expiry) return true;
-    
-    // Token expires in less than 5 minutes
+
     const expiryBuffer = new Date(Date.now() + 5 * 60 * 1000);
     return expiry < expiryBuffer;
   }
 
-  // Get auth header for SoundCloud API requests
   getAuthHeaders(): HttpHeaders {
     const token = this.accessToken$.value;
     return new HttpHeaders({
@@ -307,7 +294,6 @@ export class AuthService {
     });
   }
 
-  // Get auth header for XOMCLOUD backend API requests (uses JWT from env)
   getXomcloudHeaders(): HttpHeaders {
     return new HttpHeaders({
       'Authorization': `Bearer ${environment.apiAuthToken}`,

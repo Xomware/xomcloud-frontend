@@ -4,13 +4,24 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { Track, TrackCollection } from '../models';
+import { Track, TrackCollection, LikedTrack } from '../models';
 import { AuthService } from './auth.service';
+import { getTrackArtworkUrl } from '../utils/shared.utils';
 
 export interface PaginatedTracks {
   tracks: Track[];
   nextUrl: string | null;
   hasMore: boolean;
+}
+
+interface LikedTrackResponse {
+  collection: Array<LikedTrack | Track>;
+  next_href?: string;
+}
+
+interface StreamsResponse {
+  http_mp3_128_url?: string;
+  hls_mp3_128_url?: string;
 }
 
 @Injectable({
@@ -19,7 +30,6 @@ export interface PaginatedTracks {
 export class TrackService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
 
-  // Cache for liked tracks
   private likedTracks$ = new BehaviorSubject<Track[]>([]);
   private userTracks$ = new BehaviorSubject<Track[]>([]);
 
@@ -70,8 +80,8 @@ export class TrackService {
     const url = nextUrl || `${this.apiBaseUrl}/me/likes/tracks`;
 
     const request = nextUrl
-      ? this.http.get<any>(url, { headers: this.authService.getAuthHeaders() })
-      : this.http.get<any>(url, {
+      ? this.http.get<LikedTrackResponse>(url, { headers: this.authService.getAuthHeaders() })
+      : this.http.get<LikedTrackResponse>(url, {
           headers: this.authService.getAuthHeaders(),
           params: {
             limit: limit.toString(),
@@ -113,8 +123,8 @@ export class TrackService {
     const url = nextUrl || `${this.apiBaseUrl}/users/${userId}/likes/tracks`;
 
     const request = nextUrl
-      ? this.http.get<any>(url, { headers: this.authService.getAuthHeaders() })
-      : this.http.get<any>(url, {
+      ? this.http.get<LikedTrackResponse>(url, { headers: this.authService.getAuthHeaders() })
+      : this.http.get<LikedTrackResponse>(url, {
           headers: this.authService.getAuthHeaders(),
           params: {
             limit: limit.toString(),
@@ -132,7 +142,6 @@ export class TrackService {
         };
       }),
       catchError((error) => {
-        // Check if it's a privacy error (403)
         if (error.status === 403) {
           return of({ tracks: [], nextUrl: null, hasMore: false });
         }
@@ -143,21 +152,23 @@ export class TrackService {
 
   // ==================== Extract tracks from response ====================
 
-  private extractTracks(response: any): Track[] {
+  private extractTracks(response: LikedTrackResponse): Track[] {
     if (!response.collection || !Array.isArray(response.collection)) {
-      console.warn('Invalid response structure:', response);
       return [];
     }
 
     return response.collection
-      .filter((item: any) => item != null)
-      .map((item: any) => {
+      .filter((item): item is LikedTrack | Track => item != null)
+      .map((item) => {
         // Handle both response formats:
         // Format A: { collection: [{ track: {...} }] } - wrapped in track object
         // Format B: { collection: [{...}] } - direct track objects
-        return item.track ? item.track : item;
+        if ('track' in item && item.track) {
+          return item.track;
+        }
+        return item as Track;
       })
-      .filter((track: any) => track != null && track.id != null);
+      .filter((track): track is Track => track != null && track.id != null);
   }
 
   getLikedTracks$(): Observable<Track[]> {
@@ -166,24 +177,22 @@ export class TrackService {
 
   // ==================== Track Actions ====================
 
-  likeTrack(trackId: number): Observable<any> {
+  likeTrack(trackId: number): Observable<void> {
     return this.http
-      .post(`${this.apiBaseUrl}/likes/tracks/${trackId}`, null, {
+      .post<void>(`${this.apiBaseUrl}/likes/tracks/${trackId}`, null, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
-        tap(() => console.log(`Liked track ${trackId}`)),
         catchError((error) => this.handleError(error, 'like track'))
       );
   }
 
-  unlikeTrack(trackId: number): Observable<any> {
+  unlikeTrack(trackId: number): Observable<void> {
     return this.http
-      .delete(`${this.apiBaseUrl}/likes/tracks/${trackId}`, {
+      .delete<void>(`${this.apiBaseUrl}/likes/tracks/${trackId}`, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
-        tap(() => console.log(`Unliked track ${trackId}`)),
         catchError((error) => this.handleError(error, 'unlike track'))
       );
   }
@@ -223,14 +232,14 @@ export class TrackService {
       access?: 'playable' | 'preview' | 'blocked';
     }
   ): Observable<Track[]> {
-    let params: any = {
+    const params: Record<string, string> = {
       q: query,
       limit: limit.toString(),
       linked_partitioning: 'true',
     };
 
     if (options?.genres?.length) {
-      params.genres = options.genres.join(',');
+      params['genres'] = options.genres.join(',');
     }
     if (options?.bpmFrom) {
       params['bpm[from]'] = options.bpmFrom.toString();
@@ -245,7 +254,7 @@ export class TrackService {
       params['duration[to]'] = options.durationTo.toString();
     }
     if (options?.access) {
-      params.access = options.access;
+      params['access'] = options.access;
     }
 
     return this.http
@@ -263,12 +272,12 @@ export class TrackService {
 
   getStreamUrl(trackId: number): Observable<string> {
     return this.http
-      .get<any>(`${this.apiBaseUrl}/tracks/${trackId}/streams`, {
+      .get<StreamsResponse>(`${this.apiBaseUrl}/tracks/${trackId}/streams`, {
         headers: this.authService.getAuthHeaders(),
       })
       .pipe(
         map((response) => {
-          return response.http_mp3_128_url || response.hls_mp3_128_url || null;
+          return response.http_mp3_128_url || response.hls_mp3_128_url || '';
         }),
         catchError((error) => this.handleError(error, 'get stream URL'))
       );
@@ -293,30 +302,7 @@ export class TrackService {
       | 't300x300'
       | 't67x67' = 'large'
   ): string {
-    if (!track) {
-      return 'assets/img/default-artwork.png';
-    }
-
-    if (!track.artwork_url) {
-      return (
-        track.user?.avatar_url?.replace('large', size) ||
-        'assets/img/default-artwork.png'
-      );
-    }
-
-    let url = track.artwork_url;
-    url = url.replace('-large', `-${size}`);
-    url = url.replace('-t500x500', `-${size}`);
-    url = url.replace('-crop', `-${size}`);
-    url = url.replace('-t300x300', `-${size}`);
-    url = url.replace('-t67x67', `-${size}`);
-    url = url.replace('-badge', `-${size}`);
-
-    if (!url.includes(`-${size}`)) {
-      url = url.replace('large', size);
-    }
-
-    return url;
+    return getTrackArtworkUrl(track, size);
   }
 
   clearCache(): void {
@@ -328,9 +314,8 @@ export class TrackService {
 
   private handleError(
     error: HttpErrorResponse,
-    operation: string
+    _operation: string
   ): Observable<never> {
-    console.error(`Failed to ${operation}:`, error);
     return throwError(() => error);
   }
 }
