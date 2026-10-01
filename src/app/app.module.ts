@@ -41,7 +41,6 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
         LoaderComponent,
         ToastComponent,
         CallbackComponent,
-        AmbientBackgroundComponent,
         // Pages
         HomeComponent,
         MyProfileComponent,
@@ -57,6 +56,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
         MyCrateComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
+        AmbientBackgroundComponent,
         AppRoutingModule,
         BrowserAnimationsModule,
         FormsModule,

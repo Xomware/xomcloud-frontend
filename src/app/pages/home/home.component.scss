@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .home-container {
   min-height: 100vh;
@@ -28,22 +28,22 @@
   font-weight: $font-weight-extrabold;
   letter-spacing: $tracking-wide;
   margin: 0 0 16px 0;
-  color: #fff;
+  color: $color-text-primary;
   
   .title-x {
-    color: #ff6b35;
+    color: $color-primary;
     font-size: $text-5xl;
   }
   
   .title-cloud {
-    color: #ff6b35;
+    color: $color-primary;
     font-weight: $font-weight-regular;
   }
 }
 
 .hero-subtitle {
   font-size: $text-xl;
-  color: #b0b0c0;
+  color: $color-text-secondary;
   margin: 0 0 24px 0;
   // 300 (Light) is below the shared $font-weight-* scale, which starts at
   // 400. Kept deliberately for this hero subtitle. This app loads no
@@ -54,7 +54,7 @@
 
 .hero-description {
   font-size: $text-md;
-  color: #8a8a9a;
+  color: $color-text-muted;
   line-height: 1.7;
   margin: 0 0 40px 0;
 }
@@ -66,27 +66,27 @@
   padding: 16px 40px;
   font-size: $text-md;
   font-weight: $font-weight-semibold;
-  color: #fff;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: $color-text-primary;
+  background: $color-primary;
   border: none;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 32px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(255, 107, 53, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
   
   &.secondary {
     background: transparent;
-    border: 2px solid #ff6b35;
+    border: 2px solid $color-primary;
     box-shadow: none;
     
     &:hover {
       background: rgba(255, 107, 53, 0.1);
-      box-shadow: 0 8px 32px rgba(255, 107, 53, 0.2);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
   }
 }
@@ -126,7 +126,7 @@
   
   .bar {
     width: 8px;
-    background: linear-gradient(180deg, #ff6b35 0%, #f7931e 50%, rgba(255, 107, 53, 0.3) 100%);
+    background: $color-primary;
     border-radius: 4px;
     animation: equalizer 1.5s ease-in-out infinite;
     
@@ -169,7 +169,7 @@
 .section-title {
   text-align: center;
   font-size: $text-4xl;
-  color: #fff;
+  color: $color-text-primary;
   margin: 0 0 $spacing-2xl 0;
   font-weight: $font-weight-bold;
 }
@@ -181,8 +181,8 @@
 }
 
 .feature-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  @include glass;
+  border: 1px solid $glass-border;
   border-radius: 20px;
   padding: 32px;
   text-align: center;
@@ -203,14 +203,14 @@
 
 .feature-title {
   font-size: $text-lg;
-  color: #fff;
+  color: $color-text-primary;
   margin: 0 0 12px 0;
   font-weight: $font-weight-semibold;
 }
 
 .feature-description {
   font-size: $text-base;
-  color: #8a8a9a;
+  color: $color-text-muted;
   line-height: 1.6;
   margin: 0;
 }
@@ -223,12 +223,12 @@
   
   h2 {
     font-size: $text-3xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 16px 0;
   }
   
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-md;
     margin: 0 0 32px 0;
   }

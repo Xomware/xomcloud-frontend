@@ -1,6 +1,7 @@
 // The sky: three sheets of cloud at different depths, lit from behind by a low warm light.
 // A fragment shader, because vapour needs per-pixel noise and lighting that a sprite can't fake,
 // and a phone GPU does this at a reduced resolution with room to spare.
+// Drawn by the intro, and behind the app by the ambient background.
 
 export interface CloudFrame {
   time: number;
@@ -9,6 +10,10 @@ export interface CloudFrame {
   inhale: number;
   blast: number;
   shake: number;
+  // Camera push into the clouds. Grows with time in the intro; the ambient sky holds it at 0.
+  push: number;
+  // Where the light sits, in the shader's page units: x scaled by aspect, y down, centre 0,0.
+  sun: [number, number];
 }
 
 const VERTEX = `
@@ -29,6 +34,8 @@ uniform float uEnter;
 uniform float uInhale;
 uniform float uBlast;
 uniform float uShake;
+uniform float uPush;
+uniform vec2 uSun;
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -70,7 +77,7 @@ void main() {
   // y grows downward, as on the page.
   vec2 p = (vec2(vUv.x, 1.0 - vUv.y) - 0.5) * vec2(aspect, 1.0);
   p.y += uShake;
-  vec2 sun = vec2(0.0, 0.0);
+  vec2 sun = uSun;
   float r = length((p - sun) * vec2(1.0, 1.25));
 
   vec3 col = mix(vec3(0.016, 0.02, 0.04), vec3(0.05, 0.058, 0.09), smoothstep(-0.5, 0.5, p.y));
@@ -85,7 +92,7 @@ void main() {
     float fi = float(i);
     float depth = 0.35 + fi * 0.33;
     float scale = 4.2 - fi * 1.3;
-    float zoom = 1.0 + 0.3 * (1.0 - uEnter) * depth - 0.03 * uInhale * depth + 0.05 * uTime * depth
+    float zoom = 1.0 + 0.3 * (1.0 - uEnter) * depth - 0.03 * uInhale * depth + uPush * depth
       + uBlast * depth * depth * 1.4;
     vec2 q = p / zoom;
     vec2 off = vec2(uTime * (0.02 + 0.05 * depth) * (mod(fi, 2.0) * 2.0 - 1.0), fi * 7.3);
@@ -152,6 +159,8 @@ export function createClouds(canvas: HTMLCanvasElement): ((f: CloudFrame) => voi
   const inhale = u('uInhale');
   const blast = u('uBlast');
   const shake = u('uShake');
+  const push = u('uPush');
+  const sun = u('uSun');
 
   return (f) => {
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -162,6 +171,8 @@ export function createClouds(canvas: HTMLCanvasElement): ((f: CloudFrame) => voi
     gl.uniform1f(inhale, f.inhale);
     gl.uniform1f(blast, f.blast);
     gl.uniform1f(shake, f.shake);
+    gl.uniform1f(push, f.push);
+    gl.uniform2f(sun, f.sun[0], f.sun[1]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 }

@@ -10,22 +10,39 @@ $color-primary: #ff6b35;
 $color-secondary: #f7931e;
 $color-accent: #e94e77;
 
-// Background Colors
-$color-bg-dark: #0a0a14;
-$color-bg-surface: #121225;
-$color-bg-surface-alt: #1a1a35;
-$color-bg-card: rgba(255, 255, 255, 0.05);
-$color-bg-card-end: rgba(255, 255, 255, 0.02);
+// Background Colors: the intro's night sky (see _atmosphere.scss).
+$color-bg-dark: #07080d;
+$color-bg-surface: #0d0f18;
+$color-bg-surface-alt: #12131c;
 
-// Toolbar / Footer
-$color-bg-toolbar: #1a1a2e;
-$color-bg-toolbar-end: #16213e;
+// Toolbar, footer and overlays: dark glass over the clouds.
+$color-bg-chrome: rgba(9, 10, 15, 0.66);
+$color-bg-overlay: rgba(13, 14, 20, 0.97);
+$color-scrim: rgba(7, 8, 13, 0.72);
 
-// Text Colors
-$color-text-primary: #ffffff;
-$color-text-secondary: #b0b0c0;
-$color-text-muted: #8a8a9a;
-$color-text-dim: #6a6a7a;
+// Glass, as on the intro's track player: a dark translucent fill, a hairline border and a top
+// edge catching the light behind the clouds. Opaque enough that text never sits on a lit cloud.
+$glass-fill: linear-gradient(180deg, rgba(24, 25, 33, 0.82) 0%, rgba(15, 16, 22, 0.88) 100%);
+$glass-fill-hover: linear-gradient(180deg, rgba(32, 33, 43, 0.86) 0%, rgba(20, 21, 29, 0.9) 100%);
+$glass-edge: linear-gradient(90deg, transparent 4%, rgba(255, 255, 255, 0.12) 50%, transparent 96%) top / 100% 1px
+  no-repeat;
+$glass-border: rgba(255, 255, 255, 0.07);
+$glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+
+@mixin glass {
+  background: $glass-edge, $glass-fill;
+}
+
+@mixin glass-hover {
+  background: $glass-edge, $glass-fill-hover;
+}
+
+// Text Colors: tinted, never pure white.
+$color-text-primary: #ecebe4;
+$color-on-primary: #fcfcf2;
+$color-text-secondary: #b4b4bd;
+$color-text-muted: #8f909c;
+$color-text-dim: #6f707c;
 
 // Status Colors
 $color-success: #22c55e;
@@ -34,19 +51,11 @@ $color-warning: #fbbf24;
 $color-info: $color-primary;
 
 // Border Colors
-$color-border-subtle: rgba(255, 255, 255, 0.1);
-$color-border-light: rgba(255, 255, 255, 0.15);
+$color-border-subtle: rgba(255, 255, 255, 0.08);
+$color-border-light: rgba(255, 255, 255, 0.14);
 $color-border-primary: rgba(255, 107, 53, 0.3);
 
-// Gradients
-$gradient-primary: linear-gradient(135deg, $color-primary 0%, $color-secondary 100%);
-$gradient-bg: linear-gradient(180deg, $color-bg-dark 0%, $color-bg-surface 100%);
-$gradient-toolbar: linear-gradient(135deg, $color-bg-toolbar 0%, $color-bg-toolbar-end 100%);
-$gradient-card: linear-gradient(135deg, $color-bg-card 0%, $color-bg-card-end 100%);
-
 // Shadows
-$shadow-primary: 0 4px 15px rgba(255, 107, 53, 0.3);
-$shadow-primary-lg: 0 8px 24px rgba(255, 107, 53, 0.4);
 $shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.4);
 $shadow-toolbar: 0 2px 20px rgba(0, 0, 0, 0.3);
 

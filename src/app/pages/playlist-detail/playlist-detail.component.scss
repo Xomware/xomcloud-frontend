@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .playlist-detail-container {
   min-height: 100vh;
@@ -23,7 +23,7 @@
   }
   
   h2 {
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 24px 0;
   }
 }
@@ -35,7 +35,7 @@
 
 .back-link {
   display: inline-block;
-  color: #8a8a9a;
+  color: $color-text-muted;
   text-decoration: none;
   font-size: $text-sm;
   margin-bottom: 24px;
@@ -43,7 +43,7 @@
   transition: color 0.3s ease;
   
   &:hover {
-    color: #ff6b35;
+    color: $color-primary;
   }
 }
 
@@ -74,7 +74,7 @@
   
   .playlist-type {
     font-size: $text-2xs;
-    color: #ff6b35;
+    color: $color-primary;
     text-transform: uppercase;
     letter-spacing: $tracking-wide;
     font-weight: $font-weight-semibold;
@@ -82,13 +82,13 @@
   
   h1 {
     font-size: $text-3xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 8px 0 12px 0;
     font-weight: $font-weight-bold;
   }
   
   .playlist-meta {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-base;
     margin: 0 0 12px 0;
     display: flex;
@@ -97,21 +97,21 @@
     flex-wrap: wrap;
     
     .creator {
-      color: #fff;
+      color: $color-text-primary;
       cursor: pointer;
       
       &:hover {
-        color: #ff6b35;
+        color: $color-primary;
       }
     }
     
     .separator {
-      color: #6a6a7a;
+      color: $color-text-dim;
     }
   }
   
   .playlist-description {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-sm;
     margin: 0;
     line-height: 1.5;
@@ -129,10 +129,10 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  background: $color-primary;
   border: none;
   border-radius: 25px;
-  color: #fff;
+  color: $color-text-primary;
   font-size: $text-base;
   font-weight: $font-weight-medium;
   cursor: pointer;
@@ -140,7 +140,7 @@
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -156,12 +156,12 @@
   align-items: center;
   gap: 16px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  @include glass;
   border-radius: 8px;
   transition: all 0.2s ease;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    @include glass-hover;
     
     .add-btn {
       opacity: 1;
@@ -177,7 +177,7 @@
   }
   
   &.playing {
-    background: rgba(255, 107, 53, 0.1);
+    background: linear-gradient(rgba(255, 107, 53, 0.1), rgba(255, 107, 53, 0.1)), $glass-fill;
     
     .play-overlay {
       opacity: 1;
@@ -188,7 +188,7 @@
 
 .track-number {
   width: 24px;
-  color: #6a6a7a;
+  color: $color-text-dim;
   font-size: $text-sm;
   text-align: center;
   flex-shrink: 0;
@@ -218,7 +218,7 @@
     justify-content: center;
     opacity: 0;
     transition: opacity 0.2s ease;
-    color: #fff;
+    color: $color-text-primary;
     
     &.playing {
       opacity: 1;
@@ -233,7 +233,7 @@
   
   .track-title {
     font-size: $text-base;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
     white-space: nowrap;
     overflow: hidden;
@@ -242,18 +242,18 @@
   
   .track-artist {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0;
     cursor: pointer;
     
     &:hover {
-      color: #ff6b35;
+      color: $color-primary;
     }
   }
 }
 
 .track-duration {
-  color: #6a6a7a;
+  color: $color-text-dim;
   font-size: $text-sm;
   flex-shrink: 0;
 }
@@ -264,7 +264,7 @@
   border-radius: 50%;
   background: rgba(255, 107, 53, 0.2);
   border: none;
-  color: #ff6b35;
+  color: $color-primary;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -274,14 +274,14 @@
   flex-shrink: 0;
   
   &:hover:not(:disabled) {
-    background: #ff6b35;
-    color: #fff;
+    background: $color-primary;
+    color: $color-text-primary;
     opacity: 1;
   }
   
   &.in-queue {
     background: #22c55e;
-    color: #fff;
+    color: $color-text-primary;
     opacity: 1;
   }
   
@@ -305,7 +305,7 @@
   }
   
   h2 {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-lg;
     margin: 0;
   }

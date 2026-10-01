@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .toast {
   position: fixed;
@@ -18,17 +18,17 @@
   
   &.positive {
     background: linear-gradient(135deg, rgba(29, 185, 84, 0.95) 0%, rgba(30, 215, 96, 0.95) 100%);
-    color: white;
+    color: $color-text-primary;
   }
   
   &.negative {
     background: linear-gradient(135deg, rgba(220, 53, 69, 0.95) 0%, rgba(235, 87, 87, 0.95) 100%);
-    color: white;
+    color: $color-text-primary;
   }
   
   &.info {
     background: linear-gradient(135deg, rgba(255, 107, 53, 0.95) 0%, rgba(247, 147, 30, 0.95) 100%);
-    color: white;
+    color: $color-text-primary;
   }
 }
 

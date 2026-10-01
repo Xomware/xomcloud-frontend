@@ -57,8 +57,9 @@
       html[data-intro='play'] {
         overflow: hidden;
       }
-      /* The intro's opening frame. Keep it identical to $sky in intro.component.scss. */
-      html[data-intro='play'] .xc-boot {
+      /* The intro's opening frame, until the intro mounts over it; then the intro fades straight
+         onto the page. Keep it identical to $sky in _atmosphere.scss. */
+      html[data-intro='play']:not(:has(app-intro)) .xc-boot {
         display: block;
         position: fixed;
         inset: 0;

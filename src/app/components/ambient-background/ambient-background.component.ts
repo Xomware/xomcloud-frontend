@@ -1,295 +1,87 @@
 import {
+  ChangeDetectionStrategy,
   Component,
-  AfterViewInit,
-  OnDestroy,
+  DestroyRef,
   ElementRef,
-  ViewChild,
+  NgZone,
+  afterNextRender,
+  inject,
+  input,
+  viewChild,
 } from '@angular/core';
-import { gsap } from 'gsap';
 
+import { createClouds } from '../atmosphere/cloud-shader';
+import { grainTile } from '../atmosphere/grain';
+
+const FRAME_MS = 1000 / 30;
+// Sky seconds per real second: the intro's clouds, slowed to a drift you notice only on a long look.
+const DRIFT = 0.18;
+// The light sits just above the top edge, so the clouds are backlit without a hot spot behind the content.
+const SUN: [number, number] = [0, -0.52];
+const LIGHT = 0.9;
+
+/**
+ * The intro's backlit clouds behind the whole app, as a cheap ambient layer: about a third of
+ * the CSS resolution, 30 fps, outside Angular's zone. rAF already stops in a hidden tab, and the
+ * clock only counts frames that were drawn, so the sky resumes where it left off.
+ */
 @Component({
   selector: 'app-ambient-background',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ambient-background.component.html',
-  styleUrls: ['./ambient-background.component.scss'],
+  styleUrl: './ambient-background.component.scss',
+  host: { 'aria-hidden': 'true' },
 })
-export class AmbientBackgroundComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('ambientSvg', { static: true }) svgRef!: ElementRef<SVGElement>;
+export class AmbientBackgroundComponent {
+  // True while the intro covers the page: draw one frame so the sky is there under its fade, then wait.
+  readonly held = input(false);
 
-  private readonly NUM_BLOBS = 6;
-  private readonly SCALES = [80, 100, 120, 65, 90, 75];
-  private readonly XOMCLOUD_COLORS = [
-    '#ff6b35', // primary orange
-    '#e94e77', // accent pink
-    '#f7931e', // secondary orange
-    '#ff8c5a', // light orange variant
-  ];
-  private readonly START_POS = [
-    [300, 200],
-    [900, 400],
-    [1500, 300],
-    [600, 700],
-    [1200, 600],
-    [200, 900],
-  ];
+  private readonly sky = viewChild.required<ElementRef<HTMLCanvasElement>>('sky');
+  private readonly grain = viewChild.required<ElementRef<HTMLElement>>('grain');
 
-  private reducedMotion = false;
-  private lightningTimer: ReturnType<typeof setTimeout> | null = null;
-
-  ngAfterViewInit(): void {
-    this.reducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
-    this.initBlobs();
-
-    if (this.reducedMotion) {
-      this.placeStatic();
-    } else {
-      this.startAmbient();
-      this.scheduleLightning();
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.killAll();
-  }
-
-  private get svg(): SVGElement {
-    return this.svgRef.nativeElement;
-  }
-
-  private qa(selector: string): Element[] {
-    return Array.from(this.svg.querySelectorAll(selector));
-  }
-
-  private blob(i: number): Element | null {
-    return this.svg.querySelector(`.blob-${i}`);
-  }
-
-  private initBlobs(): void {
-    for (let i = 0; i < this.NUM_BLOBS; i++) {
-      const el = this.blob(i);
-      if (!el) continue;
-      const scale = this.SCALES[i];
-      gsap.set(el, {
-        x: this.START_POS[i][0],
-        y: this.START_POS[i][1],
-        scale: scale / 18,
-      });
-    }
-  }
-
-  private placeStatic(): void {
-    for (let i = 0; i < this.NUM_BLOBS; i++) {
-      const body = this.blob(i)?.querySelector('.b-body');
-      if (!body) continue;
-      const color = this.XOMCLOUD_COLORS[i % this.XOMCLOUD_COLORS.length];
-      gsap.set(body, { attr: { fill: color } });
-    }
-  }
-
-  private startAmbient(): void {
-    for (let i = 0; i < this.NUM_BLOBS; i++) {
-      this.wanderBlob(i);
-      this.breatheBlob(i);
-      this.cycleColor(i);
-    }
-  }
-
-  private wanderBlob(index: number): void {
-    const el = this.blob(index);
-    if (!el) return;
-
-    const x = 100 + Math.random() * 1720;
-    const y = 50 + Math.random() * 980;
-    const duration = 8 + Math.random() * 7;
-
-    gsap.to(el, {
-      x,
-      y,
-      duration,
-      ease: 'sine.inOut',
-      onComplete: () => this.wanderBlob(index),
+  constructor() {
+    const zone = inject(NgZone);
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      this.grain().nativeElement.style.backgroundImage = `url(${grainTile()})`;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const stop = zone.runOutsideAngular(() => this.run());
+      destroyRef.onDestroy(stop);
     });
   }
 
-  private breatheBlob(index: number): void {
-    const body = this.blob(index)?.querySelector('.b-body');
-    if (!body) return;
+  private run(): () => void {
+    const canvas = this.sky().nativeElement;
+    const draw = createClouds(canvas);
+    if (!draw) return () => {};
 
-    gsap.to(body, {
-      attr: { ry: 18 },
-      duration: 3 + Math.random() * 2,
-      ease: 'sine.inOut',
-      repeat: -1,
-      yoyo: true,
-      delay: Math.random() * 2,
-    });
+    let frame = 0;
+    let last = 0;
+    let time = 0;
+    let drawn = false;
+    const tick = (now: number): void => {
+      frame = requestAnimationFrame(tick);
+      if (now - last < FRAME_MS - 2 || (drawn && this.held())) return;
+      time += (Math.min(now - last, 100) / 1000) * DRIFT;
+      last = now;
+      fit(canvas);
+      draw({ time, light: LIGHT, enter: 1, inhale: 0, blast: 0, shake: 0, push: 0, sun: SUN });
+      if (!drawn) canvas.classList.add('lit');
+      drawn = true;
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
   }
+}
 
-  private cycleColor(index: number): void {
-    const body = this.blob(index)?.querySelector('.b-body');
-    if (!body) return;
-
-    const startColorIndex = index % this.XOMCLOUD_COLORS.length;
-    const colors = [
-      ...this.XOMCLOUD_COLORS.slice(startColorIndex),
-      ...this.XOMCLOUD_COLORS.slice(0, startColorIndex),
-    ];
-
-    const tl = gsap.timeline({ repeat: -1, delay: index * 5 });
-
-    colors.forEach((color) => {
-      tl.to(body, {
-        attr: { fill: color },
-        duration: 30 + Math.random() * 30,
-        ease: 'sine.inOut',
-      });
-    });
-  }
-
-  // -- Lightning --
-
-  private scheduleLightning(): void {
-    const delay = 800 + Math.random() * 2200;
-    this.lightningTimer = setTimeout(() => {
-      this.strikeLightning();
-      this.scheduleLightning();
-    }, delay);
-  }
-
-  private strikeLightning(): void {
-    const layer = this.svg.querySelector('.lightning-layer');
-    if (!layer) return;
-
-    const ns = 'http://www.w3.org/2000/svg';
-
-    const startX = 100 + Math.random() * 1720;
-    const startY = Math.random() * 200;
-    const path = this.generateBoltPath(
-      startX,
-      startY,
-      600 + Math.random() * 900
-    );
-
-    // Weighted toward orange, with pink flashes
-    const color =
-      Math.random() > 0.3
-        ? this.XOMCLOUD_COLORS[0] // orange most of the time
-        : this.XOMCLOUD_COLORS[
-            Math.floor(Math.random() * this.XOMCLOUD_COLORS.length)
-          ];
-
-    const bolt = document.createElementNS(ns, 'path');
-    bolt.setAttribute('d', path);
-    bolt.setAttribute('fill', 'none');
-    bolt.setAttribute('stroke', color);
-    bolt.setAttribute('stroke-width', '4.5');
-    bolt.setAttribute('stroke-linecap', 'round');
-    bolt.setAttribute('filter', 'url(#lightningGlow)');
-    bolt.setAttribute('opacity', '0');
-    layer.appendChild(bolt);
-
-    let branch: SVGPathElement | null = null;
-    if (Math.random() > 0.5) {
-      const segments = path.split(' L');
-      if (segments.length > 3) {
-        const branchStart =
-          Math.floor(segments.length * 0.3) +
-          Math.floor(Math.random() * (segments.length * 0.4));
-        const branchCoords = segments[branchStart]
-          ?.replace('M', '')
-          .trim()
-          .split(',');
-        if (branchCoords && branchCoords.length === 2) {
-          const bx = parseFloat(branchCoords[0]);
-          const by = parseFloat(branchCoords[1]);
-          const branchPath = this.generateBoltPath(
-            bx,
-            by,
-            80 + Math.random() * 150
-          );
-          branch = document.createElementNS(ns, 'path');
-          branch.setAttribute('d', branchPath);
-          branch.setAttribute('fill', 'none');
-          branch.setAttribute('stroke', color);
-          branch.setAttribute('stroke-width', '3');
-          branch.setAttribute('stroke-linecap', 'round');
-          branch.setAttribute('filter', 'url(#lightningGlow)');
-          branch.setAttribute('opacity', '0');
-          layer.appendChild(branch);
-        }
-      }
-    }
-
-    const elements = branch ? [bolt, branch] : [bolt];
-    const tl = gsap.timeline({
-      onComplete: () => {
-        elements.forEach((el) => el.remove());
-      },
-    });
-
-    tl.to(elements, {
-      attr: { opacity: 0.7 + Math.random() * 0.3 },
-      duration: 0.05,
-      ease: 'power4.in',
-    })
-      .to(elements, {
-        attr: { opacity: 0 },
-        duration: 0.08,
-      })
-      .to(elements, {
-        attr: { opacity: 0.4 + Math.random() * 0.4 },
-        duration: 0.03,
-        delay: 0.05 + Math.random() * 0.1,
-      })
-      .to(elements, {
-        attr: { opacity: 0 },
-        duration: 0.15 + Math.random() * 0.2,
-        ease: 'power2.out',
-      });
-  }
-
-  private generateBoltPath(
-    startX: number,
-    startY: number,
-    length: number
-  ): string {
-    let x = startX;
-    let y = startY;
-    const segments: string[] = [`M${x},${y}`];
-    const numSegments = 6 + Math.floor(Math.random() * 8);
-    const segLength = length / numSegments;
-
-    for (let i = 0; i < numSegments; i++) {
-      x += (Math.random() - 0.5) * segLength * 1.5;
-      y += segLength * (0.6 + Math.random() * 0.6);
-      x = Math.max(50, Math.min(1870, x));
-      y = Math.min(1050, y);
-      segments.push(`L${Math.round(x)},${Math.round(y)}`);
-    }
-
-    return segments.join(' ');
-  }
-
-  // -- Cleanup --
-
-  private killAll(): void {
-    if (this.lightningTimer) {
-      clearTimeout(this.lightningTimer);
-      this.lightningTimer = null;
-    }
-
-    const layer = this.svg.querySelector('.lightning-layer');
-    if (layer) {
-      layer.innerHTML = '';
-    }
-
-    const allEls = this.qa('*');
-    gsap.killTweensOf(allEls);
-
-    for (let i = 0; i < this.NUM_BLOBS; i++) {
-      const el = this.blob(i);
-      if (el) gsap.killTweensOf(el);
-    }
+// Vapour has no detail finer than a few pixels, so a third of the CSS size reads the same and costs a ninth.
+function fit(canvas: HTMLCanvasElement): void {
+  const scale = Math.min(0.34, 480 / canvas.clientWidth);
+  const w = Math.max(1, Math.round(canvas.clientWidth * scale));
+  const h = Math.max(1, Math.round(canvas.clientHeight * scale));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
   }
 }

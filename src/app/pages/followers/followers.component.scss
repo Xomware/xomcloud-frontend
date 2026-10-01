@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .followers-container {
   min-height: 100vh;
@@ -12,7 +12,7 @@
   margin-bottom: 32px;
 
   .back-link {
-    color: #8a8a9a;
+    color: $color-text-muted;
     text-decoration: none;
     font-size: $text-sm;
     display: inline-block;
@@ -20,18 +20,18 @@
     transition: color 0.3s ease;
 
     &:hover {
-      color: #ff6b35;
+      color: $color-primary;
     }
   }
 
   h1 {
     font-size: $text-3xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 8px 0;
   }
 
   .follower-count {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-base;
     margin: 0;
   }
@@ -53,20 +53,20 @@
   }
 
   h2 {
-    color: #fff;
+    color: $color-text-primary;
     font-size: $text-lg;
     margin: 0 0 12px 0;
   }
 
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0 0 24px 0;
   }
 
   .retry-btn {
     padding: 12px 32px;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    color: #fff;
+    background: $color-primary;
+    color: $color-text-primary;
     border: none;
     border-radius: 25px;
     cursor: pointer;
@@ -74,7 +74,7 @@
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
   }
 }
@@ -90,14 +90,14 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  @include glass;
+  border: 1px solid $glass-border;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    @include glass-hover;
     border-color: rgba(255, 107, 53, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
@@ -124,7 +124,7 @@
 
   .user-name {
     font-size: $text-base;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
     font-weight: $font-weight-semibold;
     white-space: nowrap;
@@ -134,7 +134,7 @@
 
   .user-handle {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0 0 8px 0;
   }
 
@@ -142,7 +142,7 @@
     display: flex;
     gap: 16px;
     font-size: $text-xs;
-    color: #6a6a7a;
+    color: $color-text-dim;
 
     span {
       white-space: nowrap;

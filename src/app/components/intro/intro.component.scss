@@ -1,9 +1,7 @@
-@use 'sass:math';
 @import 'variables';
+@import 'atmosphere';
 
 // The scene itself is drawn by intro-scene.ts; this file positions its layers and owns the exit.
-// Same as the sky drawn first by the scene and by .xc-boot in index.html.
-$sky: linear-gradient(180deg, #07080d 0%, #0d0f18 60%, #12131c 100%);
 
 :host {
   position: fixed;
@@ -54,6 +52,14 @@ $sky: linear-gradient(180deg, #07080d 0%, #0d0f18 60%, #12131c 100%);
   gap: $spacing-sm;
   padding: $spacing-lg;
   pointer-events: none;
+  // The intro fades onto the landing page, whose logo sits higher: this one goes first, so the
+  // two never show at once and only the sky cross-fades into the app's.
+  animation: xc-skip 400ms 4050ms ease-in forwards;
+
+  .leaving & {
+    animation-duration: 120ms;
+    animation-delay: 0ms;
+  }
 
   img {
     width: min(680px, 84vw);
@@ -72,18 +78,11 @@ $sky: linear-gradient(180deg, #07080d 0%, #0d0f18 60%, #12131c 100%);
 }
 
 .vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(130% 95% at 50% 50%, transparent 55%, rgba(3, 3, 6, 0.7) 100%);
-  pointer-events: none;
+  @include vignette;
 }
 
-// Film grain: a fixed noise tile jumped to a new offset 24 times a second.
 .grain {
-  position: absolute;
-  inset: -64px;
-  pointer-events: none;
-  animation: xc-grain 1000ms steps(1) infinite;
+  @include grain;
 }
 
 .skip {
@@ -129,13 +128,5 @@ $sky: linear-gradient(180deg, #07080d 0%, #0d0f18 60%, #12131c 100%);
 @keyframes xc-skip {
   to {
     opacity: 0;
-  }
-}
-
-@keyframes xc-grain {
-  @for $i from 0 through 23 {
-    #{percentage(math.div($i, 24))} {
-      transform: translate(#{(($i * 37) % 64) - 32}px, #{(($i * 53) % 64) - 32}px);
-    }
   }
 }
