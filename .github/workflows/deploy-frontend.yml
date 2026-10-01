@@ -76,7 +76,7 @@ jobs:
       - name: Invalidate CloudFront cache
         if: ${{ github.event.inputs.skip_cache_invalidation != 'true' }}
         run: |
-          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'xomcloud.xomware.com')].Id" --output text)
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items || `[]`, 'xomcloud.xomware.com')].Id" --output text)
           if [ -n "$DISTRIBUTION_ID" ]; then
             aws cloudfront create-invalidation \
               --distribution-id "$DISTRIBUTION_ID" \
