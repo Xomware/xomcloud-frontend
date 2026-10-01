@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .liked-container {
   min-height: 100vh;
@@ -15,7 +15,7 @@
 
 .back-link {
   display: inline-block;
-  color: #8a8a9a;
+  color: $color-text-muted;
   text-decoration: none;
   font-size: $text-sm;
   margin-bottom: 16px;
@@ -23,7 +23,7 @@
   transition: color 0.3s ease;
   
   &:hover {
-    color: #ff6b35;
+    color: $color-primary;
   }
 }
 
@@ -36,12 +36,12 @@
   
   h1 {
     font-size: $text-3xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
   }
   
   .track-count {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-base;
     margin: 0;
   }
@@ -62,7 +62,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: $color-text-primary;
   border: 1px solid rgba(255, 255, 255, 0.15);
   
   &:hover {
@@ -71,17 +71,17 @@
   
   &.active {
     background: rgba(255, 107, 53, 0.2);
-    border-color: #ff6b35;
-    color: #ff6b35;
+    border-color: $color-primary;
+    color: $color-primary;
   }
   
   &.primary {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    background: $color-primary;
     border: none;
-    color: #fff;
+    color: $color-text-primary;
     
     &:hover {
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
     
     &:disabled {
@@ -108,21 +108,21 @@
   }
   
   h2 {
-    color: #fff;
+    color: $color-text-primary;
     font-size: $text-lg;
     margin: 0 0 12px 0;
   }
   
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0 0 24px 0;
   }
 }
 
 .retry-btn {
   padding: 12px 32px;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  color: #fff;
+  background: $color-primary;
+  color: $color-text-primary;
   border: none;
   border-radius: 25px;
   font-size: $text-base;
@@ -131,7 +131,7 @@
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -147,13 +147,13 @@
   align-items: center;
   gap: 16px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  @include glass;
   border-radius: 12px;
   transition: all 0.2s ease;
   cursor: pointer;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    @include glass-hover;
     
     .add-btn {
       opacity: 1;
@@ -165,16 +165,16 @@
   }
   
   &.selected {
-    background: rgba(255, 107, 53, 0.15);
+    background: linear-gradient(rgba(255, 107, 53, 0.15), rgba(255, 107, 53, 0.15)), $glass-fill;
     border: 1px solid rgba(255, 107, 53, 0.3);
   }
   
   &.in-queue {
-    border-left: 3px solid #ff6b35;
+    border-left: 3px solid $color-primary;
   }
   
   &.playing {
-    background: rgba(255, 107, 53, 0.1);
+    background: linear-gradient(rgba(255, 107, 53, 0.1), rgba(255, 107, 53, 0.1)), $glass-fill;
     
     .play-overlay {
       opacity: 1;
@@ -191,7 +191,7 @@
     width: 20px;
     height: 20px;
     cursor: pointer;
-    accent-color: #ff6b35;
+    accent-color: $color-primary;
   }
 }
 
@@ -220,7 +220,7 @@
     justify-content: center;
     opacity: 0;
     transition: opacity 0.2s ease;
-    color: #fff;
+    color: $color-text-primary;
     
     &.playing {
       opacity: 1;
@@ -234,12 +234,12 @@
     right: 4px;
     width: 24px;
     height: 24px;
-    background: #ff6b35;
+    background: $color-primary;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: $color-text-primary;
   }
 }
 
@@ -250,7 +250,7 @@
   
   .track-title {
     font-size: $text-base;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
     font-weight: $font-weight-medium;
     white-space: nowrap;
@@ -260,16 +260,16 @@
   
   .track-artist {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0 0 4px 0;
     
     a {
-      color: #8a8a9a;
+      color: $color-text-muted;
       text-decoration: none;
       transition: color 0.2s ease;
       
       &:hover {
-        color: #ff6b35;
+        color: $color-primary;
       }
     }
   }
@@ -281,7 +281,7 @@
     .duration,
     .plays {
       font-size: $text-xs;
-      color: #6a6a7a;
+      color: $color-text-dim;
     }
   }
 }
@@ -297,7 +297,7 @@
   border-radius: 50%;
   background: rgba(255, 107, 53, 0.2);
   border: none;
-  color: #ff6b35;
+  color: $color-primary;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -306,14 +306,14 @@
   opacity: 0.7;
   
   &:hover:not(:disabled) {
-    background: #ff6b35;
-    color: #fff;
+    background: $color-primary;
+    color: $color-text-primary;
     opacity: 1;
   }
   
   &.in-queue {
     background: #22c55e;
-    color: #fff;
+    color: $color-text-primary;
     opacity: 1;
     
     svg path {
@@ -338,8 +338,8 @@
   padding: 14px 48px;
   font-size: $text-base;
   font-weight: $font-weight-medium;
-  color: #fff;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: $color-text-primary;
+  background: $color-primary;
   border: none;
   border-radius: 30px;
   cursor: pointer;
@@ -347,7 +347,7 @@
   
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
   
   &:disabled {

@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .playlists-container {
   min-height: 100vh;
@@ -19,7 +19,7 @@
   
   h1 {
     font-size: $text-3xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0;
   }
 }
@@ -37,18 +37,18 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.1);
-  color: #b0b0c0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: $color-text-secondary;
+  border: 1px solid $glass-border;
   
   &:hover {
     background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    color: $color-text-primary;
   }
   
   &.active {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    background: $color-primary;
     border-color: transparent;
-    color: #fff;
+    color: $color-text-primary;
   }
 }
 
@@ -69,21 +69,21 @@
   }
   
   h2 {
-    color: #fff;
+    color: $color-text-primary;
     font-size: $text-lg;
     margin: 0 0 12px 0;
   }
   
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0 0 24px 0;
   }
 }
 
 .retry-btn {
   padding: 12px 32px;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  color: #fff;
+  background: $color-primary;
+  color: $color-text-primary;
   border: none;
   border-radius: 25px;
   cursor: pointer;
@@ -91,7 +91,7 @@
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -103,7 +103,7 @@
 }
 
 .playlist-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  @include glass;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -146,8 +146,8 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  color: #fff;
+  background: $color-primary;
+  color: $color-text-primary;
   border: none;
   border-radius: 25px;
   font-size: $text-sm;
@@ -157,7 +157,7 @@
   
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -166,7 +166,7 @@
   
   .playlist-title {
     font-size: $text-base;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 6px 0;
     font-weight: $font-weight-semibold;
     white-space: nowrap;
@@ -176,13 +176,13 @@
   
   .playlist-meta {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0;
   }
   
   .playlist-user {
     font-size: $text-xs;
-    color: #6a6a7a;
+    color: $color-text-dim;
     margin: 4px 0 0 0;
   }
 }
@@ -200,7 +200,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #1a1a2e;
+  background: $color-bg-overlay;
+  border: 1px solid $glass-border;
+  box-shadow: $glass-shadow;
   border-radius: 16px;
   width: 90%;
   max-width: 700px;
@@ -242,12 +244,12 @@
   
   h2 {
     font-size: $text-xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 8px 0;
   }
   
   .modal-meta {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-sm;
     margin: 0 0 16px 0;
   }
@@ -262,7 +264,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: #fff;
+  color: $color-text-primary;
   font-size: $text-md;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -291,7 +293,7 @@
   }
   
   &.in-queue {
-    border-left: 3px solid #ff6b35;
+    border-left: 3px solid $color-primary;
     padding-left: 7px;
   }
 }
@@ -299,7 +301,7 @@
 .track-number {
   width: 28px;
   text-align: center;
-  color: #6a6a7a;
+  color: $color-text-dim;
   font-size: $text-sm;
   flex-shrink: 0;
 }
@@ -324,7 +326,7 @@
   
   .track-title {
     font-size: $text-sm;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 2px 0;
     white-space: nowrap;
     overflow: hidden;
@@ -333,13 +335,13 @@
   
   .track-artist {
     font-size: $text-xs;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0;
   }
 }
 
 .track-duration {
-  color: #6a6a7a;
+  color: $color-text-dim;
   font-size: $text-sm;
   flex-shrink: 0;
 }
@@ -350,7 +352,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: #b0b0c0;
+  color: $color-text-secondary;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,12 +362,12 @@
   
   &:hover:not(:disabled) {
     background: rgba(255, 107, 53, 0.2);
-    color: #ff6b35;
+    color: $color-primary;
   }
   
   &.in-queue {
     background: rgba(255, 107, 53, 0.2);
-    color: #ff6b35;
+    color: $color-primary;
   }
   
   &:disabled {
@@ -384,13 +386,13 @@
     width: 40px;
     height: 40px;
     border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: #ff6b35;
+    border-top-color: $color-primary;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
   
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 16px 0 0 0;
   }
 }

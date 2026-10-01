@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .profile-container {
   min-height: 100vh;
@@ -11,7 +11,7 @@
   position: absolute;
   top: 90px;
   left: 24px;
-  color: #fff;
+  color: $color-text-primary;
   text-decoration: none;
   font-size: $text-base;
   z-index: 10;
@@ -22,7 +22,7 @@
   
   &:hover {
     background: rgba(255, 107, 53, 0.3);
-    color: #ff6b35;
+    color: $color-primary;
   }
 }
 
@@ -43,15 +43,15 @@
     }
     
     h2 {
-      color: #fff;
+      color: $color-text-primary;
       font-size: $text-lg;
       margin: 0 0 24px 0;
     }
     
     .retry-btn {
       padding: 12px 32px;
-      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-      color: #fff;
+      background: $color-primary;
+      color: $color-text-primary;
       border: none;
       border-radius: 25px;
       font-size: $text-base;
@@ -60,7 +60,7 @@
       
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       }
     }
   }
@@ -74,13 +74,14 @@
 
 .profile-banner {
   height: 200px;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #e94e77 100%);
+  // Warm light breaking through the clouds above the header, not a slab of brand colour.
+  background: radial-gradient(70% 140% at 50% 0%, rgba(255, 107, 53, 0.3) 0%, rgba(255, 107, 53, 0.07) 55%, transparent 85%);
   position: relative;
   
   .banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 20, 0.8) 100%);
+    background: linear-gradient(180deg, transparent 0%, rgba(7, 8, 13, 0.8) 100%);
   }
 }
 
@@ -102,7 +103,7 @@
     width: 180px;
     height: 180px;
     border-radius: 50%;
-    border: 5px solid #0a0a14;
+    border: 5px solid $color-bg-dark;
     object-fit: cover;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   }
@@ -114,25 +115,25 @@
   
   .username {
     font-size: $text-4xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
     font-weight: $font-weight-bold;
   }
   
   .handle {
-    color: #b0b0c0;
+    color: $color-text-secondary;
     font-size: $text-md;
     margin: 0 0 8px 0;
   }
   
   .location {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-base;
     margin: 0 0 4px 0;
   }
   
   .join-date {
-    color: #6a6a7a;
+    color: $color-text-dim;
     font-size: $text-sm;
     margin: 0 0 16px 0;
   }
@@ -141,8 +142,8 @@
 .soundcloud-btn {
   padding: 10px 24px;
   background: transparent;
-  color: #ff6b35;
-  border: 2px solid #ff6b35;
+  color: $color-primary;
+  border: 2px solid $color-primary;
   border-radius: 25px;
   font-size: $text-sm;
   font-weight: $font-weight-medium;
@@ -168,8 +169,8 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  @include glass;
+  border: 1px solid $glass-border;
   border-radius: 16px;
   padding: 24px;
   text-align: center;
@@ -184,7 +185,7 @@
       border-color: rgba(255, 107, 53, 0.4);
       transform: translateY(-4px);
       background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(247, 147, 30, 0.1) 100%);
-      box-shadow: 0 8px 25px rgba(255, 107, 53, 0.2);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
   }
   
@@ -194,7 +195,7 @@
     
     &:hover {
       transform: none;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      @include glass;
       border-color: rgba(255, 255, 255, 0.08);
       box-shadow: none;
     }
@@ -204,13 +205,13 @@
     display: block;
     font-size: $text-3xl;
     font-weight: $font-weight-bold;
-    color: #ff6b35;
+    color: $color-primary;
     margin-bottom: 4px;
   }
   
   .stat-label {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     text-transform: uppercase;
     letter-spacing: $tracking-wide;
   }
@@ -238,7 +239,7 @@
   }
   
   .bio-text {
-    color: #b0b0c0;
+    color: $color-text-secondary;
     font-size: $text-base;
     line-height: 1.7;
     margin: 0;
@@ -252,7 +253,7 @@
     left: 0;
     right: 0;
     height: 40px;
-    background: linear-gradient(transparent, #0d0d1a);
+    background: linear-gradient(transparent, $color-bg-surface);
     pointer-events: none;
   }
   
@@ -262,7 +263,7 @@
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
-    color: #ff6b35;
+    color: $color-primary;
     font-size: $text-sm;
     font-weight: $font-weight-medium;
     cursor: pointer;
@@ -285,20 +286,20 @@
 
 .section-title {
   font-size: $text-xl;
-  color: #fff;
+  color: $color-text-primary;
   margin: 0;
   font-weight: $font-weight-semibold;
 }
 
 .view-all {
-  color: #ff6b35;
+  color: $color-primary;
   text-decoration: none;
   font-size: $text-base;
   font-weight: $font-weight-medium;
   transition: color 0.3s ease;
   
   &:hover {
-    color: #f7931e;
+    color: $color-secondary;
   }
 }
 
@@ -316,7 +317,7 @@
 }
 
 .track-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  @include glass;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -353,7 +354,7 @@
     transition: opacity 0.3s ease;
     
     svg {
-      color: #fff;
+      color: $color-text-primary;
     }
   }
 
@@ -365,8 +366,8 @@
     height: 36px;
     border-radius: 50%;
     border: none;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    color: #fff;
+    background: $color-primary;
+    color: $color-text-primary;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -411,7 +412,7 @@
   }
   
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0;
     font-size: $text-base;
   }
@@ -426,7 +427,7 @@
   
   .track-title {
     font-size: $text-base;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
     font-weight: $font-weight-medium;
     white-space: nowrap;
@@ -436,7 +437,7 @@
   
   .track-artist {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -458,7 +459,7 @@
 }
 
 .playlist-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  @include glass;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -485,7 +486,7 @@
   
   .playlist-title {
     font-size: $text-base;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
     font-weight: $font-weight-medium;
     white-space: nowrap;
@@ -495,7 +496,7 @@
   
   .playlist-tracks {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0;
   }
 }

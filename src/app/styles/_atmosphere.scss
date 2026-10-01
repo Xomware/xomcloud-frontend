@@ -1,0 +1,27 @@
+@use 'sass:math';
+
+// The night sky the intro opens on and the app sits in. Keep in step with .xc-boot in index.html.
+$sky: linear-gradient(180deg, #07080d 0%, #0d0f18 60%, #12131c 100%);
+
+@mixin vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(130% 95% at 50% 50%, transparent 55%, rgba(3, 3, 6, 0.7) 100%);
+  pointer-events: none;
+}
+
+// Film grain: a fixed noise tile (grain.ts) jumped to a new offset 24 times a second.
+@mixin grain {
+  position: absolute;
+  inset: -64px;
+  pointer-events: none;
+  animation: xc-grain 1000ms steps(1) infinite;
+
+  @keyframes xc-grain {
+    @for $i from 0 through 23 {
+      #{percentage(math.div($i, 24))} {
+        transform: translate(#{(($i * 37) % 64) - 32}px, #{(($i * 53) % 64) - 32}px);
+      }
+    }
+  }
+}

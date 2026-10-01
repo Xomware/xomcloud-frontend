@@ -1,13 +1,14 @@
-@import 'tokens';
+@import 'variables';
 
 .footer {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: $color-bg-chrome;
+  border-top: 1px solid $glass-border;
+  backdrop-filter: blur(14px);
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 999;
-  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .footer-content {
@@ -23,7 +24,7 @@
   flex: 1;
   
   .credit {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-sm;
     font-weight: $font-weight-regular;
   }
@@ -54,24 +55,24 @@
   border: none;
   
   &.action-btn {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    background: $color-primary;
+    color: $color-text-primary;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
   }
   
   &.github-btn {
     background: rgba(255, 255, 255, 0.1);
-    color: #b0b0b0;
+    color: $color-text-secondary;
     border: 1px solid rgba(255, 255, 255, 0.15);
     
     &:hover {
       background: rgba(255, 255, 255, 0.15);
-      color: #fff;
+      color: $color-text-primary;
       border-color: rgba(255, 255, 255, 0.25);
     }
   }

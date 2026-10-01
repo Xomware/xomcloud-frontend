@@ -1,6 +1,6 @@
 <ng-container #introHost></ng-container>
 <a class="skip-to-content" href="#main-content" [attr.inert]="introPlaying() ? '' : null">Skip to main content</a>
-<app-ambient-background></app-ambient-background>
+<app-ambient-background [held]="introPlaying()"></app-ambient-background>
 <div class="app-container" [attr.inert]="introPlaying() ? '' : null">
   <app-toolbar></app-toolbar>
   <main id="main-content" class="content" role="main">

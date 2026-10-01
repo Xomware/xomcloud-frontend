@@ -1,8 +1,8 @@
-@import 'tokens';
+@import 'variables';
 
 .toolbar {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  color: #fff;
+  background: $color-bg-chrome;
+  color: $color-text-primary;
   padding: 6px 24px;
   width: 100%;
   display: flex;
@@ -12,8 +12,8 @@
   left: 0;
   z-index: 1000;
   box-sizing: border-box;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid $glass-border;
+  backdrop-filter: blur(14px);
 }
 
 .app-title {
@@ -39,7 +39,7 @@
   gap: 6px;
 
   a {
-    color: #b0b0b0;
+    color: $color-text-secondary;
     text-decoration: none;
     padding: 8px 14px;
     border-radius: 25px;
@@ -49,23 +49,23 @@
     white-space: nowrap;
 
     &:hover {
-      color: #fff;
+      color: $color-text-primary;
       background: rgba(255, 107, 53, 0.15);
     }
 
     &.active,
     &.selected {
-      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-      color: #fff;
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      background: $color-primary;
+      color: $color-text-primary;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
   }
 }
 
 .logout-btn {
   background: transparent;
-  border: 2px solid #ff6b35;
-  color: #ff6b35;
+  border: 2px solid $color-primary;
+  color: $color-primary;
   padding: 6px 14px;
   border-radius: 25px;
   cursor: pointer;
@@ -75,8 +75,8 @@
   margin-left: 12px;
 
   &:hover {
-    background: #ff6b35;
-    color: #fff;
+    background: $color-primary;
+    color: $color-text-primary;
   }
 }
 
@@ -88,11 +88,20 @@
   display: none;
   cursor: pointer;
   margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
   padding: 6px;
+  background: transparent;
+  border-radius: $radius-md;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: rgba(255, 255, 255, 0.06);
+  }
 
   .hamburger {
     font-size: $text-lg;
-    color: #ff6b35;
+    color: $color-primary;
   }
 }
 
@@ -102,14 +111,15 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: $color-bg-overlay;
+  border-bottom: 1px solid $glass-border;
   z-index: 1000;
   flex-direction: column;
   padding: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 
   a {
-    color: #b0b0b0;
+    color: $color-text-secondary;
     text-decoration: none;
     padding: 10px 14px;
     border-radius: 8px;
@@ -119,17 +129,17 @@
 
     &:hover {
       background: rgba(255, 107, 53, 0.15);
-      color: #fff;
+      color: $color-text-primary;
     }
 
     &.active,
     &.selected {
-      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-      color: #fff;
+      background: $color-primary;
+      color: $color-text-primary;
     }
 
     &.logout-link {
-      color: #ff6b35;
+      color: $color-primary;
       margin-top: 6px;
       border-top: 1px solid rgba(255, 107, 53, 0.3);
       padding-top: 10px;
@@ -156,8 +166,8 @@
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  background: #ff6b35;
-  color: #fff;
+  background: $color-primary;
+  color: $color-text-primary;
   font-size: $text-3xs;
   font-weight: $font-weight-bold;
   border-radius: 9px;
@@ -166,8 +176,8 @@
 
 .tabs .crate-link.selected .crate-badge,
 .dropdown .crate-link.active .crate-badge {
-  background: #fff;
-  color: #ff6b35;
+  background: $color-on-primary;
+  color: $color-primary;
 }
 
 // Mobile Responsive

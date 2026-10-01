@@ -1,20 +1,45 @@
-.ambient-arena {
+@import 'variables';
+@import 'atmosphere';
+
+// The static sky is the first paint, and the whole background without WebGL or with reduced
+// motion: the intro's gradient plus the glow of a light behind the clouds above the page.
+:host {
   position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 0;
+  inset: 0 0 auto;
+  // The large viewport, so a phone's URL bar collapsing never resizes the canvas mid-scroll.
+  height: 100lvh;
+  z-index: $z-background;
   overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 45% at 50% -8%, rgba(255, 150, 100, 0.16) 0%, rgba(120, 90, 110, 0.07) 45%, transparent 75%),
+    $sky;
 }
 
-.ambient-svg {
+.sky {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  opacity: 0;
+  transition: opacity 1200ms ease;
+
+  &.lit {
+    opacity: 1;
+  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ambient-arena {
-    // Static blobs, no animation -- handled by component logic
-  }
+// Settles the clouds toward the night as the page goes down, where the content sits.
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 8, 13, 0.15) 0%, rgba(7, 8, 13, 0.55) 55%, rgba(7, 8, 13, 0.7) 100%);
+}
+
+.vignette {
+  @include vignette;
+}
+
+.grain {
+  @include grain;
 }

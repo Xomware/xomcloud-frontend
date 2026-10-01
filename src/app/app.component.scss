@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 // App shell styles - global layout only
 // Base styles are in src/styles.scss
@@ -22,8 +22,8 @@
   top: -100%;
   left: 50%;
   transform: translateX(-50%);
-  background: #ff6b35;
-  color: #fff;
+  background: $color-primary;
+  color: $color-on-primary;
   padding: 12px 24px;
   border-radius: 0 0 8px 8px;
   font-size: $text-sm;
@@ -34,7 +34,7 @@
 
   &:focus {
     top: 0;
-    outline: 2px solid #fff;
+    outline: 2px solid $color-on-primary;
     outline-offset: 2px;
   }
 }

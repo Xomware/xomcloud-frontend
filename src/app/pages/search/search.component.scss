@@ -1,4 +1,4 @@
-@import 'tokens';
+@import 'variables';
 
 .search-container {
   min-height: 100vh;
@@ -15,12 +15,12 @@
   
   h1 {
     font-size: $text-4xl;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 8px 0;
   }
   
   .subtitle {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-md;
     margin: 0 0 32px 0;
   }
@@ -37,7 +37,7 @@
 .search-icon {
   position: absolute;
   left: 20px;
-  color: #6a6a7a;
+  color: $color-text-dim;
   pointer-events: none;
 }
 
@@ -45,7 +45,7 @@
   width: 100%;
   padding: 18px 50px 18px 56px;
   font-size: $text-md;
-  color: #fff;
+  color: $color-text-primary;
   background: rgba(255, 255, 255, 0.08);
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 50px;
@@ -53,11 +53,11 @@
   transition: all 0.3s ease;
   
   &::placeholder {
-    color: #6a6a7a;
+    color: $color-text-dim;
   }
   
   &:focus {
-    border-color: #ff6b35;
+    border-color: $color-primary;
     background: rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
   }
@@ -71,14 +71,14 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: #8a8a9a;
+  color: $color-text-muted;
   font-size: $text-sm;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
     background: rgba(255, 255, 255, 0.2);
-    color: #fff;
+    color: $color-text-primary;
   }
 }
 
@@ -99,13 +99,13 @@
     width: 48px;
     height: 48px;
     border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: #ff6b35;
+    border-top-color: $color-primary;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
   
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 16px 0 0 0;
   }
 }
@@ -123,27 +123,27 @@
   }
   
   .empty-visual {
-    color: #ff6b35;
+    color: $color-primary;
     margin-bottom: 24px;
     opacity: 0.5;
   }
   
   h2 {
-    color: #fff;
+    color: $color-text-primary;
     font-size: $text-lg;
     margin: 0 0 12px 0;
   }
   
   p {
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0 0 24px 0;
   }
 }
 
 .retry-btn {
   padding: 12px 32px;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  color: #fff;
+  background: $color-primary;
+  color: $color-text-primary;
   border: none;
   border-radius: 25px;
   cursor: pointer;
@@ -151,14 +151,14 @@
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
 // Results
 .results-section {
   .results-count {
-    color: #8a8a9a;
+    color: $color-text-muted;
     font-size: $text-sm;
     margin: 0 0 24px 0;
   }
@@ -171,7 +171,7 @@
 }
 
 .track-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  @include glass;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -216,9 +216,9 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  background: $color-primary;
   border: none;
-  color: #fff;
+  color: $color-text-primary;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,7 +227,7 @@
   
   &:hover:not(:disabled) {
     transform: scale(1.1);
-    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   }
   
   &.in-queue {
@@ -244,7 +244,7 @@
   
   .track-title {
     font-size: $text-base;
-    color: #fff;
+    color: $color-text-primary;
     margin: 0 0 4px 0;
     font-weight: $font-weight-medium;
     white-space: nowrap;
@@ -254,7 +254,7 @@
   
   .track-artist {
     font-size: $text-sm;
-    color: #8a8a9a;
+    color: $color-text-muted;
     margin: 0 0 8px 0;
     white-space: nowrap;
     overflow: hidden;
@@ -265,7 +265,7 @@
     display: flex;
     justify-content: space-between;
     font-size: $text-xs;
-    color: #6a6a7a;
+    color: $color-text-dim;
   }
 }
 
