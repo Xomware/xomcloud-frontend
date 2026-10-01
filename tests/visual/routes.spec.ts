@@ -65,6 +65,10 @@ async function settle(page: Page): Promise<void> {
   );
 }
 
+// The config's reducedMotion: 'reduce' never reaches matchMedia on the first
+// navigation (Playwright 1.62), so the home page's intro would cover the shot.
+test.beforeEach(({ page }) => page.emulateMedia({ reducedMotion: 'reduce' }));
+
 test('home renders consistently (logged out)', async ({ page }) => {
   await stubBackend(page);
   await page.goto('/home', { waitUntil: 'domcontentloaded' });

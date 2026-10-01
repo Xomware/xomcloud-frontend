@@ -32,8 +32,43 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Decided before first paint, so the intro's sky is the first thing drawn
+         rather than a blank page: signed-out visitors to the home page, with
+         motion allowed. The app reads data-intro to know whether to play it. -->
+    <script>
+      (function () {
+        try {
+          var path = location.pathname;
+          if (
+            (path === '/' || path === '/home') &&
+            !localStorage.getItem('sc_access_token') &&
+            !matchMedia('(prefers-reduced-motion: reduce)').matches
+          ) {
+            document.documentElement.setAttribute('data-intro', 'play');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      .xc-boot {
+        display: none;
+      }
+      html[data-intro='play'] {
+        overflow: hidden;
+      }
+      /* The intro's opening frame. Keep it identical to $sky in intro.component.scss. */
+      html[data-intro='play'] .xc-boot {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 10002;
+        background: radial-gradient(120% 70% at 50% 110%, #3a1a2a 0%, #1a1a35 45%, #0a0a14 80%);
+      }
+    </style>
   </head>
   <body>
+    <div class="xc-boot" aria-hidden="true"></div>
     <app-root></app-root>
   </body>
 </html>

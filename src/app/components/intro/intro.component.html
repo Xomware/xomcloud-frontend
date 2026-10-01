@@ -1,0 +1,83 @@
+<section class="intro" aria-label="Xomcloud intro" [class.leaving]="leaving()">
+  <div class="sky" aria-hidden="true">
+    <svg class="defs" width="0" height="0" focusable="false">
+      <defs>
+        <linearGradient id="xc-cloud-fill" gradientUnits="userSpaceOnUse" x1="0" y1="10" x2="0" y2="190">
+          <stop offset="0" stop-color="#2c2758" />
+          <stop offset="1" stop-color="#3b2142" />
+        </linearGradient>
+        <linearGradient id="xc-contour" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="400" y2="0">
+          <stop offset="0" stop-color="#ff6b35" />
+          <stop offset="0.5" stop-color="#f7931e" />
+          <stop offset="1" stop-color="#e94e77" />
+        </linearGradient>
+        <clipPath id="xc-cloud-shape">
+          <rect x="40" y="120" width="320" height="64" rx="32" />
+          <circle cx="112" cy="122" r="56" />
+          <circle cx="190" cy="88" r="72" />
+          <circle cx="272" cy="104" r="60" />
+          <circle cx="330" cy="140" r="44" />
+          <circle cx="72" cy="150" r="34" />
+        </clipPath>
+        <symbol id="xc-cloud" viewBox="0 0 400 200">
+          <g clip-path="url(#xc-cloud-shape)">
+            <rect width="400" height="200" fill="url(#xc-cloud-fill)" />
+            @for (d of contours; track $index) {
+              <path [attr.d]="d" fill="none" stroke="url(#xc-contour)" stroke-width="2" stroke-opacity="0.3" />
+            }
+          </g>
+        </symbol>
+      </defs>
+    </svg>
+
+    <div class="glow"></div>
+
+    @for (r of ribbons; track r.tone) {
+      <div class="ribbon" [class]="r.tone" [style.top.%]="r.y" [style.--speed]="r.speed + 'ms'">
+        <svg viewBox="0 0 800 40" preserveAspectRatio="none" focusable="false">
+          <path [attr.d]="r.d" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" />
+        </svg>
+      </div>
+    }
+
+    @for (c of clouds; track $index) {
+      <div
+        class="cloud"
+        [class.right]="c.side === 'right'"
+        [style.left.%]="c.x"
+        [style.top.%]="c.y"
+        [style.width]="c.w + 'vmax'"
+        [style.animation-delay.ms]="c.delay"
+      >
+        <svg viewBox="0 0 400 200" focusable="false"><use href="#xc-cloud" /></svg>
+      </div>
+    }
+
+    <div class="wave">
+      <div class="pump">
+        <div class="bars">
+          @for (h of bars; track $index) {
+            <span class="bar" [style.--h]="h" [style.--i]="$index"></span>
+          }
+        </div>
+        <div class="played">
+          <div class="played-inner">
+            <div class="bars">
+              @for (h of bars; track $index) {
+                <span class="bar lit" [style.--h]="h"></span>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="head"><span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mark">
+    <img src="assets/img/xomcloud-banner-transparent.png" alt="Xomcloud" width="1050" height="600" />
+    <p>Your SoundCloud experience, elevated.</p>
+  </div>
+
+  <button type="button" class="skip" aria-label="Skip intro" (click)="skip()">Skip</button>
+</section>
