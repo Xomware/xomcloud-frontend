@@ -12,6 +12,10 @@ const FONT = "'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetic
 const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
 const ORANGE = '#ff6b35';
 const TRACK_SECONDS = 232;
+const ARTIST = 'DJ GTiT';
+const TITLE = 'Xomcloud Sessions Vol. 1 (Midnight Mix)';
+// How far the record sticks out of its sleeve.
+const SLIDE = 24;
 
 export interface SceneElements {
   sky: HTMLCanvasElement;
@@ -20,6 +24,7 @@ export interface SceneElements {
   logo: HTMLElement;
   tagline: HTMLElement;
   grain: HTMLElement;
+  artwork: string;
 }
 
 const clamp = (v: number, lo = 0, hi = 1): number => Math.min(hi, Math.max(lo, v));
@@ -70,6 +75,8 @@ export function createScene(el: SceneElements): (t: number) => void {
   const clouds = createClouds(el.sky);
   const bars = Array.from({ length: 600 }, (_, i) => amplitude(i / 600, rng(i * 7 + 3)()));
   el.grain.style.backgroundImage = `url(${grainTile()})`;
+  const cover = new Image();
+  cover.src = el.artwork;
 
   let lay: Layout | undefined;
   let speaker: ReturnType<typeof bakeSpeaker> | undefined;
@@ -210,18 +217,16 @@ export function createScene(el: SceneElements): (t: number) => void {
     const headX = pad;
     const headY = pad;
 
-    // Artwork: a record turning under a fixed reflection, which is how a spinning record reads.
+    // Artwork: the sleeve, with the record slid half out of it, turning under a fixed reflection,
+    // which is how a spinning record reads. The off-centre mark on the label shows the turn.
     const art = 48;
-    ctx.save();
-    roundRect(ctx, headX, headY, art, art, 3);
-    ctx.clip();
-    ctx.fillStyle = '#16171d';
-    ctx.fillRect(headX, headY, art, art);
-    const rx = headX + art / 2;
+    const rx = headX + art / 2 + SLIDE;
     const ry = headY + art / 2;
+    const rr = art * 0.46;
+    ctx.save();
     ctx.fillStyle = '#0b0b0e';
     ctx.beginPath();
-    ctx.arc(rx, ry, art * 0.46, 0, Math.PI * 2);
+    ctx.arc(rx, ry, rr, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 0.5;
@@ -239,7 +244,7 @@ export function createScene(el: SceneElements): (t: number) => void {
     glint.addColorStop(0.6, 'rgba(255,255,255,0)');
     ctx.fillStyle = glint;
     ctx.beginPath();
-    ctx.arc(rx, ry, art * 0.46, 0, Math.PI * 2);
+    ctx.arc(rx, ry, rr, 0, Math.PI * 2);
     ctx.fill();
     const spin = (t / 1000) * Math.PI * 2 * (33.3 / 60);
     ctx.translate(rx, ry);
@@ -249,15 +254,31 @@ export function createScene(el: SceneElements): (t: number) => void {
     ctx.arc(0, 0, art * 0.16, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = 'rgba(20,10,8,0.55)';
-    ctx.fillRect(-art * 0.1, -art * 0.035, art * 0.12, art * 0.025);
+    ctx.fillRect(art * 0.02, -art * 0.035, art * 0.12, art * 0.025);
     ctx.fillStyle = '#e9e4d8';
     ctx.beginPath();
     ctx.arc(0, 0, art * 0.018, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 2;
+    roundRect(ctx, headX, headY, art, art, 3);
+    ctx.fillStyle = '#16171d';
+    ctx.fill();
+    ctx.restore();
+    if (cover.complete && cover.naturalWidth) {
+      ctx.save();
+      roundRect(ctx, headX, headY, art, art, 3);
+      ctx.clip();
+      ctx.drawImage(cover, headX, headY, art, art);
+      ctx.restore();
+    }
+
     // Play / pause.
-    const bx = headX + art + 14 + 18;
+    const bx = headX + art + SLIDE + 14 + 18;
     const by = headY + art / 2;
     ctx.fillStyle = ORANGE;
     ctx.beginPath();
@@ -279,10 +300,11 @@ export function createScene(el: SceneElements): (t: number) => void {
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#8f909c';
     ctx.font = `400 ${phone ? 12 : 13}px ${FONT}`;
-    ctx.fillText('Unknown Artist', tx, by - 4);
+    ctx.fillText(ARTIST, tx, by - 4);
     ctx.fillStyle = '#ecebe4';
     ctx.font = `500 ${phone ? 14 : 15}px ${FONT}`;
-    ctx.fillText(phone ? 'Untitled (Club Mix)' : 'Untitled Track 07 (Club Mix)', tx, by + 15);
+    // Ends short of the level meter, which sits under the title's right end.
+    ctx.fillText(ellipsize(ctx, TITLE, cw - pad - (phone ? 6 : 8) * 6 - 10 - tx), tx, by + 15);
 
     // BPM readout with a beat lamp, and a level meter: the kind of glass on a DJ mixer.
     const k = t > DROP - INHALE && t < DROP ? 0 : kick(t);
@@ -383,6 +405,13 @@ function meter(t: number, band: number, bands: number): number {
   const build = t < DROP ? 0.75 + 0.25 * (t / DROP) : 1;
   const level = (0.25 + 0.5 * kick(t) * low + 0.35 * hat * (1 - low) + 0.18 * jitter) * build;
   return clamp(level * (1 - silence * 0.85), 0.05, 1);
+}
+
+function ellipsize(ctx: CanvasRenderingContext2D, text: string, max: number): string {
+  if (ctx.measureText(text).width <= max) return text;
+  let cut = text.length;
+  while (cut > 1 && ctx.measureText(`${text.slice(0, cut).trimEnd()}…`).width > max) cut--;
+  return `${text.slice(0, cut).trimEnd()}…`;
 }
 
 function fmt(sec: number): string {

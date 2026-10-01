@@ -4,6 +4,8 @@
 // The scene itself is drawn by intro-scene.ts; this file positions its layers and owns the exit.
 
 :host {
+  // Referenced from CSS so the build fingerprints it; the scene reads it back for the canvas.
+  --artwork: url('./djgtit.webp');
   position: fixed;
   inset: 0;
   z-index: $z-toast + 2;

@@ -41,6 +41,7 @@ export class IntroComponent implements OnInit, OnDestroy {
   private readonly logo = viewChild.required<ElementRef<HTMLElement>>('logo');
   private readonly tagline = viewChild.required<ElementRef<HTMLElement>>('tagline');
   private readonly grain = viewChild.required<ElementRef<HTMLElement>>('grain');
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   private timer?: ReturnType<typeof setTimeout>;
   private frame = 0;
@@ -68,6 +69,7 @@ export class IntroComponent implements OnInit, OnDestroy {
   }
 
   private play(): void {
+    const artwork = getComputedStyle(this.host.nativeElement).getPropertyValue('--artwork');
     const draw = createScene({
       sky: this.sky().nativeElement,
       gear: this.gear().nativeElement,
@@ -75,6 +77,7 @@ export class IntroComponent implements OnInit, OnDestroy {
       logo: this.logo().nativeElement,
       tagline: this.tagline().nativeElement,
       grain: this.grain().nativeElement,
+      artwork: artwork.match(/url\(["']?([^"')]+)/)?.[1] ?? '',
     });
     const start = performance.now();
     const tick = (): void => {
