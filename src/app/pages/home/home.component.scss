@@ -161,7 +161,7 @@
 
 // Features Section
 .features {
-  padding: 80px 24px;
+  padding: $spacing-3xl $spacing-lg;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -170,7 +170,7 @@
   text-align: center;
   font-size: $text-4xl;
   color: #fff;
-  margin: 0 0 48px 0;
+  margin: 0 0 $spacing-2xl 0;
   font-weight: $font-weight-bold;
 }
 
@@ -218,7 +218,7 @@
 // CTA Section
 .cta {
   text-align: center;
-  padding: 80px 24px;
+  padding: $spacing-3xl $spacing-lg;
   background: linear-gradient(180deg, transparent 0%, rgba(255, 107, 53, 0.05) 100%);
   
   h2 {
@@ -259,6 +259,16 @@
   
   .section-title {
     font-size: $text-2xl;
+    margin-bottom: $spacing-xl;
+  }
+
+  .features,
+  .cta {
+    padding: $spacing-2xl $spacing-lg;
+  }
+
+  .features-grid {
+    gap: $spacing-md;
   }
   
   .waveform .bar {
